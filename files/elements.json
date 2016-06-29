@@ -1,0 +1,1073 @@
+[
+    {
+        "element":"H",
+        "electronegativity":2.2,
+        "heat":14.304,
+        "group":1,
+        "period":1,
+        "element name":"Hydrogen",
+        "atomic weight":1.008
+    },
+    {
+        "element":"He",
+        "electronegativity":null,
+        "heat":5.193,
+        "group":18,
+        "period":1,
+        "element name":"Helium",
+        "atomic weight":4.0026
+    },
+    {
+        "element":"Li",
+        "electronegativity":0.98,
+        "heat":3.582,
+        "group":1,
+        "period":2,
+        "element name":"Lithium",
+        "atomic weight":6.94
+    },
+    {
+        "element":"Be",
+        "electronegativity":1.57,
+        "heat":1.825,
+        "group":2,
+        "period":2,
+        "element name":"Beryllium",
+        "atomic weight":9.012183
+    },
+    {
+        "element":"B",
+        "electronegativity":2.04,
+        "heat":1.026,
+        "group":13,
+        "period":2,
+        "element name":"Boron",
+        "atomic weight":10.81
+    },
+    {
+        "element":"C",
+        "electronegativity":2.55,
+        "heat":0.709,
+        "group":14,
+        "period":2,
+        "element name":"Carbon",
+        "atomic weight":12.011
+    },
+    {
+        "element":"N",
+        "electronegativity":3.04,
+        "heat":1.04,
+        "group":15,
+        "period":2,
+        "element name":"Nitrogen",
+        "atomic weight":14.007
+    },
+    {
+        "element":"O",
+        "electronegativity":3.44,
+        "heat":0.918,
+        "group":16,
+        "period":2,
+        "element name":"Oxygen",
+        "atomic weight":15.999
+    },
+    {
+        "element":"F",
+        "electronegativity":3.98,
+        "heat":0.824,
+        "group":17,
+        "period":2,
+        "element name":"Fluorine",
+        "atomic weight":18.99840316
+    },
+    {
+        "element":"Ne",
+        "electronegativity":null,
+        "heat":1.03,
+        "group":18,
+        "period":2,
+        "element name":"Neon",
+        "atomic weight":20.179
+    },
+    {
+        "element":"Na",
+        "electronegativity":0.93,
+        "heat":1.228,
+        "group":1,
+        "period":3,
+        "element name":"Sodium",
+        "atomic weight":22.9897692
+    },
+    {
+        "element":"Mg",
+        "electronegativity":1.31,
+        "heat":1.023,
+        "group":2,
+        "period":3,
+        "element name":"Magnesium",
+        "atomic weight":24.305
+    },
+    {
+        "element":"Al",
+        "electronegativity":1.61,
+        "heat":0.897,
+        "group":13,
+        "period":3,
+        "element name":"Aluminium",
+        "atomic weight":26.981538
+    },
+    {
+        "element":"Si",
+        "electronegativity":1.9,
+        "heat":0.705,
+        "group":14,
+        "period":3,
+        "element name":"Silicon",
+        "atomic weight":28.085
+    },
+    {
+        "element":"P",
+        "electronegativity":2.19,
+        "heat":0.769,
+        "group":15,
+        "period":3,
+        "element name":"Phosphorus",
+        "atomic weight":30.97376199
+    },
+    {
+        "element":"S",
+        "electronegativity":2.58,
+        "heat":0.71,
+        "group":16,
+        "period":3,
+        "element name":"Sulfur",
+        "atomic weight":32.06
+    },
+    {
+        "element":"Cl",
+        "electronegativity":3.16,
+        "heat":0.479,
+        "group":17,
+        "period":3,
+        "element name":"Chlorine",
+        "atomic weight":35.45
+    },
+    {
+        "element":"Ar",
+        "electronegativity":null,
+        "heat":0.52,
+        "group":18,
+        "period":3,
+        "element name":"Argon",
+        "atomic weight":39.94
+    },
+    {
+        "element":"K",
+        "electronegativity":0.82,
+        "heat":0.757,
+        "group":1,
+        "period":4,
+        "element name":"Potassium",
+        "atomic weight":39.098
+    },
+    {
+        "element":"Ca",
+        "electronegativity":1,
+        "heat":0.647,
+        "group":2,
+        "period":4,
+        "element name":"Calcium",
+        "atomic weight":40.07
+    },
+    {
+        "element":"Sc",
+        "electronegativity":1.36,
+        "heat":0.568,
+        "group":3,
+        "period":4,
+        "element name":"Scandium",
+        "atomic weight":44.9559
+    },
+    {
+        "element":"Ti",
+        "electronegativity":1.54,
+        "heat":0.523,
+        "group":4,
+        "period":4,
+        "element name":"Titanium",
+        "atomic weight":47.86
+    },
+    {
+        "element":"V",
+        "electronegativity":1.63,
+        "heat":0.489,
+        "group":5,
+        "period":4,
+        "element name":"Vanadium",
+        "atomic weight":50.941
+    },
+    {
+        "element":"Cr",
+        "electronegativity":1.66,
+        "heat":0.449,
+        "group":6,
+        "period":4,
+        "element name":"Chromium",
+        "atomic weight":51.996
+    },
+    {
+        "element":"Mn",
+        "electronegativity":1.55,
+        "heat":0.479,
+        "group":7,
+        "period":4,
+        "element name":"Manganese",
+        "atomic weight":54.93804
+    },
+    {
+        "element":"Fe",
+        "electronegativity":1.83,
+        "heat":0.449,
+        "group":8,
+        "period":4,
+        "element name":"Iron",
+        "atomic weight":55.84
+    },
+    {
+        "element":"Co",
+        "electronegativity":1.88,
+        "heat":0.421,
+        "group":9,
+        "period":4,
+        "element name":"Cobalt",
+        "atomic weight":58.93319
+    },
+    {
+        "element":"Ni",
+        "electronegativity":1.91,
+        "heat":0.444,
+        "group":10,
+        "period":4,
+        "element name":"Nickel",
+        "atomic weight":58.693
+    },
+    {
+        "element":"Cu",
+        "electronegativity":1.9,
+        "heat":0.385,
+        "group":11,
+        "period":4,
+        "element name":"Copper",
+        "atomic weight":63.54
+    },
+    {
+        "element":"Zn",
+        "electronegativity":1.65,
+        "heat":0.388,
+        "group":12,
+        "period":4,
+        "element name":"Zinc",
+        "atomic weight":65.3
+    },
+    {
+        "element":"Ga",
+        "electronegativity":1.81,
+        "heat":0.371,
+        "group":13,
+        "period":4,
+        "element name":"Gallium",
+        "atomic weight":69.72
+    },
+    {
+        "element":"Ge",
+        "electronegativity":2.01,
+        "heat":0.32,
+        "group":14,
+        "period":4,
+        "element name":"Germanium",
+        "atomic weight":72.63
+    },
+    {
+        "element":"As",
+        "electronegativity":2.18,
+        "heat":0.329,
+        "group":15,
+        "period":4,
+        "element name":"Arsenic",
+        "atomic weight":74.92159
+    },
+    {
+        "element":"Se",
+        "electronegativity":2.55,
+        "heat":0.321,
+        "group":16,
+        "period":4,
+        "element name":"Selenium",
+        "atomic weight":78.97
+    },
+    {
+        "element":"Br",
+        "electronegativity":2.96,
+        "heat":0.474,
+        "group":17,
+        "period":4,
+        "element name":"Bromine",
+        "atomic weight":79.904
+    },
+    {
+        "element":"Kr",
+        "electronegativity":3,
+        "heat":0.248,
+        "group":18,
+        "period":4,
+        "element name":"Krypton",
+        "atomic weight":83.79
+    },
+    {
+        "element":"Rb",
+        "electronegativity":0.82,
+        "heat":0.363,
+        "group":1,
+        "period":5,
+        "element name":"Rubidium",
+        "atomic weight":85.467
+    },
+    {
+        "element":"Sr",
+        "electronegativity":0.95,
+        "heat":0.301,
+        "group":2,
+        "period":5,
+        "element name":"Strontium",
+        "atomic weight":87.6
+    },
+    {
+        "element":"Y",
+        "electronegativity":1.22,
+        "heat":0.298,
+        "group":3,
+        "period":5,
+        "element name":"Yttrium",
+        "atomic weight":88.9058
+    },
+    {
+        "element":"Zr",
+        "electronegativity":1.33,
+        "heat":0.278,
+        "group":4,
+        "period":5,
+        "element name":"Zirconium",
+        "atomic weight":91.22
+    },
+    {
+        "element":"Nb",
+        "electronegativity":1.6,
+        "heat":0.265,
+        "group":5,
+        "period":5,
+        "element name":"Niobium",
+        "atomic weight":92.9063
+    },
+    {
+        "element":"Mo",
+        "electronegativity":2.16,
+        "heat":0.251,
+        "group":6,
+        "period":5,
+        "element name":"Molybdenum",
+        "atomic weight":95.9
+    },
+    {
+        "element":"Tc",
+        "electronegativity":1.9,
+        "heat":null,
+        "group":7,
+        "period":5,
+        "element name":"Technetium",
+        "atomic weight":98
+    },
+    {
+        "element":"Ru",
+        "electronegativity":2.2,
+        "heat":0.238,
+        "group":8,
+        "period":5,
+        "element name":"Ruthenium",
+        "atomic weight":101
+    },
+    {
+        "element":"Rh",
+        "electronegativity":2.28,
+        "heat":0.243,
+        "group":9,
+        "period":5,
+        "element name":"Rhodium",
+        "atomic weight":102.9055
+    },
+    {
+        "element":"Pd",
+        "electronegativity":2.2,
+        "heat":0.244,
+        "group":10,
+        "period":5,
+        "element name":"Palladium",
+        "atomic weight":106.4
+    },
+    {
+        "element":"Ag",
+        "electronegativity":1.93,
+        "heat":0.235,
+        "group":11,
+        "period":5,
+        "element name":"Silver",
+        "atomic weight":107.868
+    },
+    {
+        "element":"Cd",
+        "electronegativity":1.69,
+        "heat":0.232,
+        "group":12,
+        "period":5,
+        "element name":"Cadmium",
+        "atomic weight":112.41
+    },
+    {
+        "element":"In",
+        "electronegativity":1.78,
+        "heat":0.233,
+        "group":13,
+        "period":5,
+        "element name":"Indium",
+        "atomic weight":114.81
+    },
+    {
+        "element":"Sn",
+        "electronegativity":1.96,
+        "heat":0.228,
+        "group":14,
+        "period":5,
+        "element name":"Tin",
+        "atomic weight":118.71
+    },
+    {
+        "element":"Sb",
+        "electronegativity":2.05,
+        "heat":0.207,
+        "group":15,
+        "period":5,
+        "element name":"Antimony",
+        "atomic weight":121.76
+    },
+    {
+        "element":"Te",
+        "electronegativity":2.1,
+        "heat":0.202,
+        "group":16,
+        "period":5,
+        "element name":"Tellurium",
+        "atomic weight":127.6
+    },
+    {
+        "element":"I",
+        "electronegativity":2.66,
+        "heat":0.214,
+        "group":17,
+        "period":5,
+        "element name":"Iodine",
+        "atomic weight":126.9044
+    },
+    {
+        "element":"Xe",
+        "electronegativity":2.6,
+        "heat":0.158,
+        "group":18,
+        "period":5,
+        "element name":"Xenon",
+        "atomic weight":131.29
+    },
+    {
+        "element":"Cs",
+        "electronegativity":0.79,
+        "heat":0.242,
+        "group":1,
+        "period":6,
+        "element name":"Caesium",
+        "atomic weight":132.9054519
+    },
+    {
+        "element":"Ba",
+        "electronegativity":0.89,
+        "heat":0.204,
+        "group":2,
+        "period":6,
+        "element name":"Barium",
+        "atomic weight":137.32
+    },
+    {
+        "element":"La",
+        "electronegativity":1.1,
+        "heat":0.195,
+        "group":null,
+        "period":6,
+        "element name":"Lanthanum",
+        "atomic weight":138.9054
+    },
+    {
+        "element":"Ce",
+        "electronegativity":1.12,
+        "heat":0.192,
+        "group":null,
+        "period":6,
+        "element name":"Cerium",
+        "atomic weight":140.11
+    },
+    {
+        "element":"Pr",
+        "electronegativity":1.13,
+        "heat":0.193,
+        "group":null,
+        "period":6,
+        "element name":"Praseodymium",
+        "atomic weight":140.9076
+    },
+    {
+        "element":"Nd",
+        "electronegativity":1.14,
+        "heat":0.19,
+        "group":null,
+        "period":6,
+        "element name":"Neodymium",
+        "atomic weight":144.24
+    },
+    {
+        "element":"Pm",
+        "electronegativity":1.13,
+        "heat":null,
+        "group":null,
+        "period":6,
+        "element name":"Promethium",
+        "atomic weight":145
+    },
+    {
+        "element":"Sm",
+        "electronegativity":1.17,
+        "heat":0.197,
+        "group":null,
+        "period":6,
+        "element name":"Samarium",
+        "atomic weight":150.3
+    },
+    {
+        "element":"Eu",
+        "electronegativity":1.2,
+        "heat":0.182,
+        "group":null,
+        "period":6,
+        "element name":"Europium",
+        "atomic weight":151.96
+    },
+    {
+        "element":"Gd",
+        "electronegativity":1.2,
+        "heat":0.236,
+        "group":null,
+        "period":6,
+        "element name":"Gadolinium",
+        "atomic weight":157.2
+    },
+    {
+        "element":"Tb",
+        "electronegativity":1.2,
+        "heat":0.182,
+        "group":null,
+        "period":6,
+        "element name":"Terbium",
+        "atomic weight":158.9253
+    },
+    {
+        "element":"Dy",
+        "electronegativity":1.22,
+        "heat":0.17,
+        "group":null,
+        "period":6,
+        "element name":"Dysprosium",
+        "atomic weight":162.5
+    },
+    {
+        "element":"Ho",
+        "electronegativity":1.23,
+        "heat":0.165,
+        "group":null,
+        "period":6,
+        "element name":"Holmium",
+        "atomic weight":164.9303
+    },
+    {
+        "element":"Er",
+        "electronegativity":1.24,
+        "heat":0.168,
+        "group":null,
+        "period":6,
+        "element name":"Erbium",
+        "atomic weight":167.25
+    },
+    {
+        "element":"Tm",
+        "electronegativity":1.25,
+        "heat":0.16,
+        "group":null,
+        "period":6,
+        "element name":"Thulium",
+        "atomic weight":168.9342
+    },
+    {
+        "element":"Yb",
+        "electronegativity":1.1,
+        "heat":0.155,
+        "group":null,
+        "period":6,
+        "element name":"Ytterbium",
+        "atomic weight":173.04
+    },
+    {
+        "element":"Lu",
+        "electronegativity":1.27,
+        "heat":0.154,
+        "group":3,
+        "period":6,
+        "element name":"Lutetium",
+        "atomic weight":174.966
+    },
+    {
+        "element":"Hf",
+        "electronegativity":1.3,
+        "heat":0.144,
+        "group":4,
+        "period":6,
+        "element name":"Hafnium",
+        "atomic weight":178.4
+    },
+    {
+        "element":"Ta",
+        "electronegativity":1.5,
+        "heat":0.14,
+        "group":5,
+        "period":6,
+        "element name":"Tantalum",
+        "atomic weight":180.9478
+    },
+    {
+        "element":"W",
+        "electronegativity":2.36,
+        "heat":0.132,
+        "group":6,
+        "period":6,
+        "element name":"Tungsten",
+        "atomic weight":183.8
+    },
+    {
+        "element":"Re",
+        "electronegativity":1.9,
+        "heat":0.137,
+        "group":7,
+        "period":6,
+        "element name":"Rhenium",
+        "atomic weight":186.2
+    },
+    {
+        "element":"Os",
+        "electronegativity":2.2,
+        "heat":0.13,
+        "group":8,
+        "period":6,
+        "element name":"Osmium",
+        "atomic weight":190.2
+    },
+    {
+        "element":"Ir",
+        "electronegativity":2.2,
+        "heat":0.131,
+        "group":9,
+        "period":6,
+        "element name":"Iridium",
+        "atomic weight":192.21
+    },
+    {
+        "element":"Pt",
+        "electronegativity":2.28,
+        "heat":0.133,
+        "group":10,
+        "period":6,
+        "element name":"Platinum",
+        "atomic weight":195.08
+    },
+    {
+        "element":"Au",
+        "electronegativity":2.54,
+        "heat":0.129,
+        "group":11,
+        "period":6,
+        "element name":"Gold",
+        "atomic weight":196.96656
+    },
+    {
+        "element":"Hg",
+        "electronegativity":2,
+        "heat":0.14,
+        "group":12,
+        "period":6,
+        "element name":"Mercury",
+        "atomic weight":200.59
+    },
+    {
+        "element":"Tl",
+        "electronegativity":1.62,
+        "heat":0.129,
+        "group":13,
+        "period":6,
+        "element name":"Thallium",
+        "atomic weight":204.38
+    },
+    {
+        "element":"Pb",
+        "electronegativity":1.87,
+        "heat":0.129,
+        "group":14,
+        "period":6,
+        "element name":"Lead",
+        "atomic weight":207
+    },
+    {
+        "element":"Bi",
+        "electronegativity":2.02,
+        "heat":0.122,
+        "group":15,
+        "period":6,
+        "element name":"Bismuth",
+        "atomic weight":208.9804
+    },
+    {
+        "element":"Po",
+        "electronegativity":2,
+        "heat":null,
+        "group":16,
+        "period":6,
+        "element name":"Polonium",
+        "atomic weight":209
+    },
+    {
+        "element":"At",
+        "electronegativity":2.2,
+        "heat":null,
+        "group":17,
+        "period":6,
+        "element name":"Astatine",
+        "atomic weight":210
+    },
+    {
+        "element":"Rn",
+        "electronegativity":2.2,
+        "heat":0.094,
+        "group":18,
+        "period":6,
+        "element name":"Radon",
+        "atomic weight":222
+    },
+    {
+        "element":"Fr",
+        "electronegativity":0.7,
+        "heat":null,
+        "group":1,
+        "period":7,
+        "element name":"Francium",
+        "atomic weight":223
+    },
+    {
+        "element":"Ra",
+        "electronegativity":0.9,
+        "heat":0.094,
+        "group":2,
+        "period":7,
+        "element name":"Radium",
+        "atomic weight":226
+    },
+    {
+        "element":"Ac",
+        "electronegativity":1.1,
+        "heat":0.12,
+        "group":null,
+        "period":7,
+        "element name":"Actinium",
+        "atomic weight":227
+    },
+    {
+        "element":"Th",
+        "electronegativity":1.3,
+        "heat":0.113,
+        "group":null,
+        "period":7,
+        "element name":"Thorium",
+        "atomic weight":232.037
+    },
+    {
+        "element":"Pa",
+        "electronegativity":1.5,
+        "heat":null,
+        "group":null,
+        "period":7,
+        "element name":"Protactinium",
+        "atomic weight":231.0358
+    },
+    {
+        "element":"U",
+        "electronegativity":1.38,
+        "heat":0.116,
+        "group":null,
+        "period":7,
+        "element name":"Uranium",
+        "atomic weight":238.0289
+    },
+    {
+        "element":"Np",
+        "electronegativity":1.36,
+        "heat":null,
+        "group":null,
+        "period":7,
+        "element name":"Neptunium",
+        "atomic weight":237
+    },
+    {
+        "element":"Pu",
+        "electronegativity":1.28,
+        "heat":null,
+        "group":null,
+        "period":7,
+        "element name":"Plutonium",
+        "atomic weight":244
+    },
+    {
+        "element":"Am",
+        "electronegativity":1.13,
+        "heat":null,
+        "group":null,
+        "period":7,
+        "element name":"Americium",
+        "atomic weight":243
+    },
+    {
+        "element":"Cm",
+        "electronegativity":1.28,
+        "heat":null,
+        "group":null,
+        "period":7,
+        "element name":"Curium",
+        "atomic weight":247
+    },
+    {
+        "element":"Bk",
+        "electronegativity":1.3,
+        "heat":null,
+        "group":null,
+        "period":7,
+        "element name":"Berkelium",
+        "atomic weight":247
+    },
+    {
+        "element":"Cf",
+        "electronegativity":1.3,
+        "heat":null,
+        "group":null,
+        "period":7,
+        "element name":"Californium",
+        "atomic weight":251
+    },
+    {
+        "element":"Es",
+        "electronegativity":1.3,
+        "heat":null,
+        "group":null,
+        "period":7,
+        "element name":"Einsteinium",
+        "atomic weight":252
+    },
+    {
+        "element":"Fm",
+        "electronegativity":1.3,
+        "heat":null,
+        "group":null,
+        "period":7,
+        "element name":"Fermium",
+        "atomic weight":257
+    },
+    {
+        "element":"Md",
+        "electronegativity":1.3,
+        "heat":null,
+        "group":null,
+        "period":7,
+        "element name":"Mendelevium",
+        "atomic weight":258
+    },
+    {
+        "element":"No",
+        "electronegativity":1.3,
+        "heat":null,
+        "group":null,
+        "period":7,
+        "element name":"Nobelium",
+        "atomic weight":259
+    },
+    {
+        "element":"Lr",
+        "electronegativity":1.3,
+        "heat":null,
+        "group":3,
+        "period":7,
+        "element name":"Lawrencium",
+        "atomic weight":266
+    },
+    {
+        "element":"Rf",
+        "electronegativity":null,
+        "heat":null,
+        "group":4,
+        "period":7,
+        "element name":"Rutherfordium",
+        "atomic weight":267
+    },
+    {
+        "element":"Db",
+        "electronegativity":null,
+        "heat":null,
+        "group":5,
+        "period":7,
+        "element name":"Dubnium",
+        "atomic weight":268
+    },
+    {
+        "element":"Sg",
+        "electronegativity":null,
+        "heat":null,
+        "group":6,
+        "period":7,
+        "element name":"Seaborgium",
+        "atomic weight":269
+    },
+    {
+        "element":"Bh",
+        "electronegativity":null,
+        "heat":null,
+        "group":7,
+        "period":7,
+        "element name":"Bohrium",
+        "atomic weight":270
+    },
+    {
+        "element":"Hs",
+        "electronegativity":null,
+        "heat":null,
+        "group":8,
+        "period":7,
+        "element name":"Hassium",
+        "atomic weight":269
+    },
+    {
+        "element":"Mt",
+        "electronegativity":null,
+        "heat":null,
+        "group":9,
+        "period":7,
+        "element name":"Meitnerium",
+        "atomic weight":278
+    },
+    {
+        "element":"Ds",
+        "electronegativity":null,
+        "heat":null,
+        "group":10,
+        "period":7,
+        "element name":"Darmstadtium",
+        "atomic weight":281
+    },
+    {
+        "element":"Rg",
+        "electronegativity":null,
+        "heat":null,
+        "group":11,
+        "period":7,
+        "element name":"Roentgenium",
+        "atomic weight":282
+    },
+    {
+        "element":"Cn",
+        "electronegativity":null,
+        "heat":null,
+        "group":12,
+        "period":7,
+        "element name":"Copernicium",
+        "atomic weight":285
+    },
+    {
+        "element":"Uut",
+        "electronegativity":null,
+        "heat":null,
+        "group":13,
+        "period":7,
+        "element name":"Ununtrium",
+        "atomic weight":286
+    },
+    {
+        "element":"Fl",
+        "electronegativity":null,
+        "heat":null,
+        "group":14,
+        "period":7,
+        "element name":"Flerovium",
+        "atomic weight":289
+    },
+    {
+        "element":"Uup",
+        "electronegativity":null,
+        "heat":null,
+        "group":15,
+        "period":7,
+        "element name":"Ununpentium",
+        "atomic weight":289
+    },
+    {
+        "element":"Lv",
+        "electronegativity":null,
+        "heat":null,
+        "group":16,
+        "period":7,
+        "element name":"Livermorium",
+        "atomic weight":293
+    },
+    {
+        "element":"Uus",
+        "electronegativity":null,
+        "heat":null,
+        "group":17,
+        "period":7,
+        "element name":"Ununseptium",
+        "atomic weight":294
+    },
+    {
+        "element":"Uuo",
+        "electronegativity":null,
+        "heat":null,
+        "group":18,
+        "period":7,
+        "element name":"Ununoctium",
+        "atomic weight":294
+    },
+    {
+        "element":"Uuo",
+        "electronegativity":null,
+        "heat":null,
+        "group":18,
+        "period":7,
+        "element name":"Ununoctium",
+        "atomic weight":294
+    }
+]
