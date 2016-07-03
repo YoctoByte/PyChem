@@ -40,49 +40,30 @@ def parse_from_string(html_string):
 
     # begin parsing the string:
     depth = 0
-    open_tags = dict()  # elements which are not closed yet
-    awaiting_elements = list()  # elements which are closed, but are waiting until depth decreases
-    for tag_string, plain_text in to_tag_strings(html_string):
-        element = _parse_to_element(tag_string, plain_text)
+    tag_structure = Element()
+    for tag_string, text in to_tag_strings(html_string):
+        element = _parse_to_element(tag_string)
 
-        if element.name[0] == '/':  # if element is closing tag
-            depth -= 1
-            element.name = element.name[1:]
-            try:
-                starting_element = open_tags[element.name].pop()
-            except KeyError:
-                raise ValueError('String could not be parsed as HTML text. '
-                                 'It contains ending tags without corresponding starting tags')
-            starting_element.depth = depth
-
-            new_awaiting_elements = list()
-            for awaiting_element in awaiting_elements:
-                if awaiting_element.depth > depth:
-                    starting_element.content.append(awaiting_element)
-                else:
-                    new_awaiting_elements.append(awaiting_element)
-            awaiting_elements = new_awaiting_elements
-            awaiting_elements.append(starting_element)
-        else:  # if element is not a closing tag
-            if element.name == '!DOCTYPE':
+        if element.name[0] != '/':  # if element is not a closing tag
+            if element.name.upper() == '!DOCTYPE':
                 continue
+            if text:
+                element.content = [text]
+            tag_structure.add(element, depth)
             if element.paired:
                 depth += 1
-                if element.name in open_tags:
-                    open_tags[element.name].append(element)
-                else:
-                    open_tags[element.name] = [element]
-            else:
-                element.depth = depth
-                awaiting_elements.append(element)
-    return awaiting_elements.pop()
+        else:  # if element is a closing tag
+            if element.paired:
+                depth -= 1
+            tag_structure.add(text, depth)
+    return tag_structure
 
 
 def _parse_to_element(tag_string, text=''):
     attribute_strings = tag_string.split(' ')
     tag_name = attribute_strings.pop(0)
 
-    if tag_name in non_paired_tags:
+    if tag_name.strip('/') in non_paired_tags:
         paired = False
     else:
         paired = True
@@ -112,13 +93,30 @@ class Element:
         if content:
             self.content = content
 
+    def add(self, content, depth):
+        if depth < 0:
+            raise ValueError('depth too high')
+        if depth == 0:
+            if isinstance(content, list):
+                self.content.extend(content)
+            elif isinstance(content, Element) or isinstance(content, str):
+                self.content.append(content)
+            else:
+                raise ValueError('Added content should be a list, string, or html element.')
+        else:
+            for item in reversed(self.content):
+                if isinstance(item, Element):
+                    item.add(content, depth-1)
+                    break
+
     def get_elements(self, elem_name, recursive=True):
         elements = list()
         for content in self.content:
-            if content.name == elem_name:
-                elements.append(content)
-            if recursive:
-                elements.extend(content.get_elements(elem_name))
+            if isinstance(content, Element):
+                if content.name == elem_name:
+                    elements.append(content)
+                if recursive:
+                    elements.extend(content.get_elements(elem_name))
         return elements
 
     def remove(self, name=None, attribute=None, recursive=True):
@@ -155,17 +153,12 @@ class Element:
                     return False
 
         for i, content in enumerate(self.content):
-            if (content.name == name or not name) and attr_match(content.attributes):
-                del self.content[i]
-                continue
-            if recursive:
-                content.remove(name=name, attribute=attribute, recursive=recursive)
-
-    def append(self, item):
-        self.content.append(item)
-
-    def extend(self, item):
-        self.content.extend(item)
+            if isinstance(content, Element):
+                if (content.name == name or not name) and attr_match(content.attributes):
+                    del self.content[i]
+                    continue
+                if recursive:
+                    content.remove(name=name, attribute=attribute, recursive=recursive)
 
     def __iter__(self):
         for item in self.content:
@@ -183,7 +176,10 @@ class Element:
             return ''
 
         for content in self.content:
-            text += content.to_text()
+            if isinstance(content, Element):
+                text += content.to_text()
+            elif isinstance(content, str):
+                text += content
         return text
 
     def __str__(self):
@@ -197,6 +193,8 @@ class Element:
         content_string = ''
         for element in self:
             content_string += str(element)
+            if isinstance(element, str):
+                content_string += '\n'
         content_string = indent(content_string)
 
         attr_string = ''

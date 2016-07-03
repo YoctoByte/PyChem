@@ -1,11 +1,10 @@
-from htmlparser import parse_from_url
+from htmlparser import parse_from_url, parse_from_file
 import json
 import requests
 
 
-def parse_tables_to_json(url):
+def parse_page_to_json(page, url):
     json_data = list()
-    page = parse_from_url(url)
     page_raw = requests.get(url)
     html_string = page_raw.content.decode('utf-8')
     with open('files/isotopes/' + url.split('/')[-1] + '.html', 'w') as file:
@@ -62,4 +61,7 @@ def _parse_value(string):
 
     return value
 
-parse_tables_to_json('https://en.wikipedia.org/wiki/Isotopes_of_hydrogen')
+url = 'https://en.wikipedia.org/wiki/Isotopes_of_hydrogen'
+page = parse_from_file('files/isotopes/Isotopes_of_hydrogen.html')
+# page = parse_from_url(url)
+parse_page_to_json(page, url)
