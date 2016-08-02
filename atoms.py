@@ -13,9 +13,33 @@ class Atom:
         """
         self.number = get_element_number(element)
         self.surroundings = list()
+        self.chirality = None
+        self.charge = 0
 
     def __getitem__(self, item):
-        return DATA[self.number][translate_attribute(item)]
+        if item == 'valence electrons':
+            return self._get_valence_electrons()
+        else:
+            return DATA[self.number][translate_attribute(item)]
+
+    def _get_valence_electrons(self):
+        electron_config = self['configuration']
+        orbitals = electron_config.split(' ')
+        if orbitals[0][0] == '[':
+            orbitals.pop(0)
+
+        electron_count = 0
+        contains_d = False
+        for orbital in orbitals:
+            if orbital[1] in 'sp':
+                electron_count += int(orbital[2:])
+            if orbital[1] in 'df':
+                contains_d = True
+
+        if electron_count in [1, 2] and contains_d:
+            return -1
+        else:
+            return electron_count
 
 
 def get_element_number(element):
@@ -43,14 +67,11 @@ def get_info(element, attribute):
     :param attribute: The attribute that is retrieved. Example: "weight" or "electronegativity"
     :return: The desired information about the atom(s). If a value is not known, None is returned
     """
+    if element == 'all':
+        element = list(range(1, 119))
     if isinstance(element, list):
         values = list()
         for item in element:
-            values.append(DATA[get_element_number(item)][attribute])
-        return values
-    elif element == 'all':
-        values = list()
-        for item in range(1, 119):
             values.append(DATA[get_element_number(item)][attribute])
         return values
     else:
@@ -62,8 +83,11 @@ def load_data():
         global DATA
         DATA = json.load(json_file)
     for element in DATA:
-        number_lookup[element['name']] = element['z']
-        number_lookup[element['symbol']] = element['z']
+        try:
+            number_lookup[element['name']] = element['z']
+            number_lookup[element['symbol']] = element['z']
+        except KeyError:
+            print(element)
     number_lookup[None] = -1
 
 

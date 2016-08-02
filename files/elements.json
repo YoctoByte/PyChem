@@ -1605,7 +1605,26 @@
         "boiling point":3716.0
     },
     {
-        "z":59
+        "z":59,
+        "electronegativity":null,
+        "triple point":null,
+        "appearance":null,
+        "phase":null,
+        "color":null,
+        "heat of evaporation":null,
+        "symbol":null,
+        "atomic weight":null,
+        "crystal structure":null,
+        "name":null,
+        "melting point":null,
+        "magnetic ordering":null,
+        "configuration":null,
+        "category":null,
+        "heat of fusion":null,
+        "cas":null,
+        "heat of vaporization":null,
+        "electrons per shell":null,
+        "boiling point":null
     },
     {
         "electronegativity":1.14,
