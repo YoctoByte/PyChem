@@ -23,23 +23,28 @@ def parse_from_string(html_string):
     depth = 0
     html_page = Element()
     for token in tokenize(html_string):
-        if token[0] == '<':  # token is a tag or comment
-            if token[1] == '!':  # token is a comment
+        if token[0] == '<':  # Token is a tag or comment
+            if token[1] == '!':  # Token is a comment
                 continue
-            elif token[1] == '/':  # token is an end-tag
+            elif token[1] == '/':  # Token is an end-tag
                 if token[2:-1] not in non_closing_tag_names:
                     depth -= 1
-            else:  # token is a start-tag
+            else:  # Token is a start-tag
                 element = parse_tag_token(token)
                 html_page.add(element, depth)
                 if element.name not in non_closing_tag_names:
                     depth += 1
-        else:  # token is text
+        else:  # Token is text
             html_page.add(token, depth)
     return html_page
 
 
 def tokenize(html_string):
+    """
+    :param html_string: The HTML string to be tokenized.
+    :return: Yield tag tokens and plain text tokens until end of string. Yielded tag tokens do include the brackets
+    """
+
     # Compress the string to a single line:
     new_string = ''
     for line in html_string.split('\n'):
@@ -47,20 +52,25 @@ def tokenize(html_string):
     html_string = new_string
 
     # Start yielding tokens:
-    position_right_bracket = -1
+    pos_left = html_string.find('<')
+    text_token = html_string[0:pos_left]
+    if text_token:
+        yield text_token
     while True:
-        position_left_bracket = html_string.find('<', position_right_bracket)
-        if position_left_bracket == -1:
-            yield html_string[position_right_bracket+1:len(html_string)]
+        pos_right = html_string.find('>', pos_left)
+        tag_token = html_string[pos_left:pos_right+1]
+        yield tag_token
+        if pos_right == -1:
+            raise ValueError('Error during tokenizing of the html string.')
+        pos_left = html_string.find('<', pos_right)
+        if pos_left == -1:  # If end of string
+            text_token = html_string[pos_right+1:]
+            if text_token:
+                yield text_token
             break
-        text_token = html_string[position_right_bracket+1:position_left_bracket]
+        text_token = html_string[pos_right+1:pos_left]
         if text_token:
             yield text_token
-        position_right_bracket = html_string.find('>', position_left_bracket)
-        tag_token = html_string[position_left_bracket:position_right_bracket+1]
-        yield tag_token
-        if position_right_bracket == -1:
-            raise ValueError('Error during tokenizing of the html string.')
 
 
 def parse_tag_token(tag_token):
@@ -168,6 +178,10 @@ class Element:
         text = ''
         if self.name == 'br':
             text = '\n' + text
+        if self.name in ['head']:
+            return text
+        if 'style' in self.attributes and 'display:none' in self.attributes['style']:
+            return text
         for content in self.content:
             if isinstance(content, Element):
                 text += content.to_text()
@@ -199,3 +213,10 @@ class Element:
             end_tag = '</' + self.name + '>\n'
 
         return '<' + self.name + attr_string + '>\n' + content_string + end_tag
+
+    def get_links(self):
+        links = list()
+        for link in self.get_elements('a'):
+            if 'href' in link.attributes:
+                links.append(link.attributes['href'])
+        return links
