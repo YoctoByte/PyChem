@@ -54,7 +54,7 @@ def html_to_json():
         file.write(non_parsable)
 
 
-def process_json_data():
+def process_json_data_old():
     isotopes_data = list()
     non_standard_isotopes = str()
     for filename in ('files/isotopes/json_files/' + fn for fn in os.listdir('files/isotopes/json_files')):
@@ -97,4 +97,79 @@ def temp():
                     json_file_out.write(file_data)
 
 
-temp()
+def process_json_data():
+    isotopes_data = list()
+    non_standard_isotopes = str()
+    for filename in ('files/isotopes/json_files/' + fn for fn in os.listdir('files/isotopes/json_files')):
+        with open(filename) as json_file:
+            json_data = json_file.read()
+        table = json.loads(json_data)
+
+        isotope_data = list()
+        head_row = table.pop(0)
+        if len(head_row) == 10:
+            for row in (row for row in table if len(row) in [8, 10]):
+                isotope = dict()
+                isotope['z'] = row[1]
+                isotope['n'] = row[2]
+                isotope['sym'] = row[0]
+                isotope['m'] = row[3]
+                isotope['hl'] = row[4]
+                isotope['spin'] = row[-3]
+                isotope['mf'] = row[-2]
+                isotope['mfr'] = row[-1]
+                if len(row) == 8 and row[4] not in ['stable', 'Stable']:
+                    continue
+                isotope_data.append(isotope)
+            isotopes_data.append(isotope_data)
+        elif len(head_row) == 8:
+            for row in (row for row in table if len(row) in [6, 8]):
+                isotope = dict()
+                isotope['z'] = row[1]
+                isotope['n'] = row[2]
+                isotope['sym'] = row[0]
+                isotope['m'] = row[3]
+                isotope['hl'] = row[4]
+                isotope['spin'] = row[-1]
+                if len(row) == 6 and row[4] not in ['stable', 'Stable']:
+                    continue
+                isotope_data.append(isotope)
+            isotopes_data.append(isotope_data)
+        elif len(head_row) == 11:
+            for row in (row for row in table if len(row) in [9, 11]):
+                isotope = dict()
+                isotope['z'] = row[2]
+                isotope['n'] = row[3]
+                isotope['sym'] = row[0]
+                isotope['m'] = row[4]
+                isotope['hl'] = row[5]
+                isotope['spin'] = row[-3]
+                isotope['mf'] = row[-2]
+                isotope['mfr'] = row[-1]
+                if len(row) == 9 and row[5] not in ['stable', 'Stable']:
+                    continue
+                isotope_data.append(isotope)
+            isotopes_data.append(isotope_data)
+        elif len(head_row) == 9:
+            for row in (row for row in table if len(row) in [7, 9]):
+                isotope = dict()
+                isotope['z'] = row[1]
+                isotope['n'] = row[2]
+                isotope['sym'] = row[0]
+                isotope['m'] = row[3]
+                isotope['hl'] = row[4]
+                isotope['spin'] = row[-2]
+                isotope['mf'] = row[-1]
+                if len(row) == 9 and row[5] not in ['stable', 'Stable']:
+                    continue
+                isotope_data.append(isotope)
+            isotopes_data.append(isotope_data)
+        else:
+            non_standard_isotopes += filename + '\n'
+    with open('files/isotopes/non_standard_isotopes.txt', 'w') as file:
+        file.write(non_standard_isotopes)
+    with open('files/isotopes/data.json', 'w') as file:
+        json.dump(isotopes_data, file, separators=(',', ':'), indent=4)
+
+
+process_json_data()
