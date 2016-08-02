@@ -1,6 +1,8 @@
-from htmlparser.htmlparser import parse_from_url
 import json
+
 import requests
+
+from htmlparser import parse_from_url
 
 
 def parse_page_to_json(url):

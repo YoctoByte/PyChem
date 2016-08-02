@@ -5,6 +5,13 @@ non_closing_tag_names = ['area', 'base', 'br', 'col', 'command',
                          'meta', 'param', 'source', 'wbr', 'keygen',
                          'track', 'button']
 
+# \u00b7 : multiplication dot
+# \u200b : nothing (?)
+# \u2212 : minus sign
+# \u00b0 : degrees sign
+# \u00b1 : plusminus sign
+# \u2013 : longer minus white: 12185-10-3\nred: 7sign
+
 
 def parse_from_url(url):
     page = requests.get(url)
@@ -55,7 +62,7 @@ def tokenize(html_string):
     pos_left = html_string.find('<')
     text_token = html_string[0:pos_left]
     if text_token:
-        yield text_token
+        yield text_token.replace('&#160;', ' ').replace('&#160', ' ')
     while True:
         pos_right = html_string.find('>', pos_left)
         tag_token = html_string[pos_left:pos_right+1]
@@ -66,11 +73,11 @@ def tokenize(html_string):
         if pos_left == -1:  # If end of string
             text_token = html_string[pos_right+1:]
             if text_token:
-                yield text_token
+                yield text_token.replace('&#160;', ' ').replace('&#160', ' ')
             break
         text_token = html_string[pos_right+1:pos_left]
         if text_token:
-            yield text_token
+            yield text_token.replace('&#160;', ' ').replace('&#160', ' ')
 
 
 def parse_tag_token(tag_token):

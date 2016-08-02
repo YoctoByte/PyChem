@@ -1,9 +1,9 @@
 import os
-import requests
 import json
+import requests
 
-from htmlparser.wikiparser import parse_row
-from htmlparser.htmlparser import parse_from_file
+from wikiparser import parse_row
+from htmlparser import parse_from_file
 
 
 def download_content():
@@ -45,7 +45,7 @@ def html_to_json():
 
         if best_table:
             name = filename.split('/')[-1].split('.')[0]
-            with open('files/isotopes/json_files_2/' + name + '.json', 'w') as jsonfile:
+            with open('files/isotopes/json_files/' + name + '.json', 'w') as jsonfile:
                 json.dump(best_table, jsonfile, separators=(',', ':'), indent=4)
 
             print(filename + ' parsed. ' + str(len(tables)) + ' tables found.')
@@ -56,6 +56,7 @@ def html_to_json():
         file.write(non_parsable)
 
 
+# todo: implement head row detection
 def process_json_data():
     isotopes_data = list()
     non_standard_isotopes = str()
