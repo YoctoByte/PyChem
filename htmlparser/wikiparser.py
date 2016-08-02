@@ -1,4 +1,4 @@
-from htmlparser import parse_from_url
+from htmlparser.htmlparser import parse_from_url
 import json
 import requests
 
