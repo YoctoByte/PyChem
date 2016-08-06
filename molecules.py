@@ -17,133 +17,141 @@ class Molecule:
         examples for IUPAC: 'aluminium sulfate', 'carbon dioxide'
         examples for CAS: '10043-01-3', '124-38-9'
         """
+        self.atoms = set()
+        self.bonds = list()
         if data_type.lower() == 'formula':
-            self.atoms, self.bonds = from_formula(molecule_data)
-        elif data_type.lower() == 'smiles':
-            self.atoms, self.bonds = from_smiles(molecule_data)
-        elif data_type.lower() == 'iupac':
-            self.atoms, self.bonds = from_iupac(molecule_data)
+            self.from_formula(molecule_data)
+        elif data_type.lower() in ['smiles', 'smilesx']:
+            self.from_smiles(molecule_data)
         elif data_type.lower() == 'cas':
-            self.atoms, self.bonds = from_cas(molecule_data)
+            self.from_cas(molecule_data)
         elif data_type.lower() == 'name':
-            self.atoms, self.bonds = from_name(molecule_data)
+            self.from_name(molecule_data)
         else:
-            self.atoms, self.bonds = from_data(molecule_data)
+            self.from_data(molecule_data)
+        if data_type != 'smilesx':
+            self.check_molecule()
 
-
-def from_formula(formula_string):
-    return [], []
-
-
-def from_iupac(iupac_string):
-    return [], []
-
-
-def from_smiles(smiles_string):
-    def tokenize(smiles_string):
-        index = 0
-        while index < len(smiles_string):
-            if smiles_string[index] == '(':
-                right_brack = index
-                while True:
-                    right_brack = smiles_string.find(')', right_brack) + 1
-                    if right_brack == 0:
-                        raise ValueError
-                    bracketed_string = smiles_string[index:right_brack]
-                    if bracketed_string.count('(') == bracketed_string.count(')'):
-                        yield bracketed_string
-                        index = right_brack
-                        break
-            elif smiles_string[index] == '[':
-                right_brack = smiles_string.find(']', index) + 1
-                if right_brack == 0:
-                    raise ValueError
-                yield smiles_string[index:right_brack]
-                index = right_brack
-            elif smiles_string[index] == '%':
-                label_string = ''
-                while True:
-                    index += 1
-                    if smiles_string[index] in '0123456789':
-                        label_string += smiles_string[index]
-                    else:
-                        break
-            else:
-                yield smiles_string[index]
-                index += 1
-
-    def fill_hydrogen(molecule):
-        return molecule
-
-    molecule = set()
-    labels = dict()
-    last_atom = None
-    bond_type = 'normal'
-    for token in tokenize(smiles_string):
-        if token in ['B', 'C', 'N', 'O', 'P', 'S', 'F', 'Cl', 'Br', 'I']:
-            new_atom = Atom(token)
-            if last_atom:
-                last_atom.add_bond(new_atom, bond_type)
-                new_atom.add_bond(last_atom, bond_type)
-            molecule.add(new_atom)
-            last_atom = new_atom
-            bond_type = 'normal'
-        elif isinstance(token, int):
-            if token not in labels:
-                labels[token] = last_atom
-            else:
-                labels[token].add_bond(new_atom, bond_type)
-                new_atom.add_bond(labels[token], bond_type)
-                bond_type = 'normal'
-        elif token in ['=', '#', '$']:
-            if token == '=':
-                bond_type = 'double'
-            elif token == '#':
-                bond_type = 'triple'
-            elif token == '$':
-                bond_type = 'quadruple'
-        elif token[0] == '(':
-            new_molecule = from_smiles(token[1:-1])
-        elif token[0] == '[':
-            token = token[1:-1]
-            if token[1].isalpha():
-                element = token[0:2]
-                token = token[2:]
-            else:
-                element = token[0:1]
-                token = token[1:]
-            if token[0] in ['+', '-']:
-                if token[1].isnumeric():
-                    charge = int(token[1])
-                    if token[0] == '-':
-                        charge *= -1
-                    token = token[2:]
-                else:
-                    charge = 1
-                    if token[0] == '-':
-                        charge *= -1
-                    token = token[1:]
-            chirality = None
-            charge = None
-
-    return fill_hydrogen(molecule)
-
-
-def from_cas(cas_string):
-    return [], []
-
-
-def from_name(name):
-    return [], []
-
-
-def from_data(data):
-    def guess_data_type(data):
+    def __str__(self):
         pass
 
-    return [], []
+    def check_molecule(self):
+        pass
 
-from_smiles('COC(=O)C(\C)=C\C1C(C)(C)[C@H]1C(=O)O[C@@H]2C(C)=C(C(=O)C2)CC=CC=C')
+    def from_formula(self, formula_string):
+        pass
+
+    def from_smiles(self, smiles_string):
+        def tokenize(smiles_string):
+            index = 0
+            while index < len(smiles_string):
+                if smiles_string[index] == '(':
+                    right_brack = index
+                    while True:
+                        right_brack = smiles_string.find(')', right_brack) + 1
+                        if right_brack == 0:
+                            raise ValueError
+                        bracketed_string = smiles_string[index:right_brack]
+                        if bracketed_string.count('(') == bracketed_string.count(')'):
+                            yield bracketed_string
+                            index = right_brack
+                            break
+                elif smiles_string[index] == '[':
+                    right_brack = smiles_string.find(']', index) + 1
+                    if right_brack == 0:
+                        raise ValueError
+                    yield smiles_string[index:right_brack]
+                    index = right_brack
+                elif smiles_string[index] == '%':
+                    label_string = ''
+                    while True:
+                        index += 1
+                        if smiles_string[index] in '0123456789':
+                            label_string += smiles_string[index]
+                        else:
+                            break
+                else:
+                    yield smiles_string[index]
+                    index += 1
+
+        def connect_bonds():
+            pass
+
+        def fill_hydrogen():
+            pass
+
+        self.first_atom = None
+        self.first_bond_type = ''
+        active_atom = None
+        bond_type = ''
+        for token in tokenize(smiles_string):
+            print(token)
+            if token in ['B', 'C', 'N', 'O', 'P', 'S', 'F', 'Cl', 'Br', 'I']:
+                new_atom = Atom(token)
+                if not self.first_atom:
+                    self.first_atom = new_atom
+                if active_atom:
+                    self.bonds.append({'atoms': {active_atom, new_atom}, 'type': bond_type})
+                self.atoms.add(new_atom)
+                active_atom = new_atom
+                bond_type = ''
+            elif isinstance(token, int):
+                self.bonds.append({'atoms': {active_atom, token}, 'type': bond_type})
+                bond_type = ''
+            elif token in ['=', '#', '$']:
+                bond_type = token
+                if not self.first_atom:
+                    self.first_bond_type = token
+            elif token[0] == '(':
+                side_chain = Molecule(token[1:-1], 'smilesx')
+                self.atoms.update(side_chain.atoms)
+                self.bonds.extend(side_chain.bonds)
+                self.bonds.append({'atoms': {active_atom, side_chain.first_atom}, 'type': side_chain.first_bond_type})
+            elif token[0] == '[':
+                token = token[1:-1]
+                if token[1].isalpha():
+                    element = token[0:2]
+                    token = token[2:]
+                else:
+                    element = token[0:1]
+                    token = token[1:]
+                new_atom = Atom(element)
+                if token[0] in ['+', '-']:
+                    if token[1:].isnumeric():
+                        charge = int(token[1])
+                        if token[0] == '-':
+                            charge *= -1
+                        token = token[2:]
+                    else:
+                        charge = 1
+                        if token[0] == '-':
+                            charge *= -1
+                        token = token[1:]
+                    new_atom.charge = charge
+                    chirality = None  # todo
+                    if active_atom:
+                        self.bonds.append({'atoms': {active_atom, new_atom}, 'type': bond_type})
+                    self.atoms.add(new_atom)
+                    active_atom = new_atom
+                    bond_type = ''
+
+    def from_cas(self, cas_string):
+        pass
+
+    def from_name(self, name):
+        pass
+
+    def from_data(self, data):
+        def guess_data_type(data):
+            if '[' in data:
+                pass
+                # not name or cas
+
+
+for atom in Molecule('[Cu+2].[O-]S(=O)(=O)[O-]', 'smiles').atoms:
+    print(atom['name'])
+
+# COC(=O)C(\C)=C\C1C(C)(C)[C@H]1C(=O)O[C@@H]2C(C)=C(C(=O)C2)CC=CC=C
 # '[Cu+2].[O-]S(=O)(=O)[O-]')
 # CC(=O)C
 # Molecule(formula='NaCO3')
