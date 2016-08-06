@@ -12,12 +12,12 @@ class Atom:
         :param element: the atom number, name or symbol of the element.
         """
         self.number = get_element_number(element)
-        self.bonds = set()
+        self.bonds = list()
         self.chirality = chirality
         self.charge = charge
 
     def add_bond(self, atom, bond='normal'):
-        self.bonds.add({'atom': atom, 'bond': bond})
+        self.bonds.append({'atom': atom, 'bond': bond})
 
     def __getitem__(self, item):
         if item == 'valence electrons':

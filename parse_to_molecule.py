@@ -55,7 +55,7 @@ def smiles(smiles_string):
             if last_atom:
                 last_atom.add_bond(new_atom, bond_type)
                 new_atom.add_bond(last_atom, bond_type)
-            molecule.add(new_atom, bond_type)
+            molecule.add(new_atom)
             last_atom = new_atom
             bond_type = 'normal'
         elif isinstance(token, int):
@@ -76,7 +76,23 @@ def smiles(smiles_string):
             new_molecule = smiles(token[1:-1])
         elif token[0] == '[':
             token = token[1:-1]
-            element = None  # todo
+            if token[1].isalpha():
+                element = token[0:2]
+                token = token[2:]
+            else:
+                element = token[0:1]
+                token = token[1:]
+            if token[0] in ['+', '-']:
+                if token[1].isnumeric():
+                    charge = int(token[1])
+                    if token[0] == '-':
+                        charge *= -1
+                    token = token[2:]
+                else:
+                    charge = 1
+                    if token[0] == '-':
+                        charge *= -1
+                    token = token[1:]
             chirality = None
             charge = None
 
