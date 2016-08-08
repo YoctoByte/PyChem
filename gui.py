@@ -50,7 +50,7 @@ class Canvas(tk.Tk):
         bonds = list()  # list of dicts
         pos = (50, 100)
         angle = 30
-        longest_chain = molecule.longest_chain()[0]
+        longest_chain = molecule['longest chain'][0]
         previous_atom = None
         for atom in longest_chain:
             x, y = pos

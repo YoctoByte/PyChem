@@ -1,7 +1,6 @@
 from atoms import Atom
 import gui
 
-# todo: verify whether a molecule is valid or not; octet rule and stuff...
 # todo: calculate resonance structures
 # todo: predict stability of molecule
 # todo: create molecule from IUPAC naming
@@ -18,20 +17,43 @@ class Molecule:
         examples for name (iupac conventions): 'aluminium sulfate', 'carbon dioxide'
         examples for CAS: '10043-01-3', '124-38-9'
         """
-        self.atoms = set()
-        self.bonds = list()
+        self.properties = dict()
+        self['atoms'] = set()
+        self['bonds'] = list()
+        self['rings'] = None
+        self['longest chain'] = None
+        self['iupac name'] = None
+        self['cas number'] = None
+        self['smiles'] = None
+        self['formula'] = None
         if data_type.lower() == 'formula':
-            self.from_formula(molecule_data)
+            self._from_formula(molecule_data)
+            self['formula'] = molecule_data
         elif data_type.lower() in ['smiles', 'smilesx']:
-            self.from_smiles(molecule_data)
+            self._from_smiles(molecule_data)
+            self['smiles'] = molecule_data
         elif data_type.lower() == 'cas':
-            self.from_cas(molecule_data)
+            self._from_cas(molecule_data)
+            self['cas number'] = molecule_data
         elif data_type.lower() == 'name':
-            self.from_name(molecule_data)
+            self._from_name(molecule_data)
+            self['iupac name'] = molecule_data
         else:
-            self.from_data(molecule_data)
+            self._from_data(molecule_data)
         if data_type != 'smilesx':
             self.check_molecule()
+
+    def __setitem__(self, key, value):
+        self.properties[key] = value
+
+    def __getitem__(self, item):
+        if item == 'longest chain' and not self.properties[item]:
+            self[item] = self._find_longest_chain()
+        if item == 'smiles' and not self.properties[item]:
+            self[item] = self._to_smiles()
+        if item == 'formula' and not self.properties[item]:
+            self[item] = self._to_formula()
+        return self.properties[item]
 
     def __str__(self):
         pass
@@ -41,12 +63,16 @@ class Molecule:
         canvas.draw_molecule(self)
 
     def check_molecule(self):
+        # todo: verify whether a molecule is valid or not; octet rule and stuff...
         pass
 
-    def from_formula(self, formula_string):
+    def _from_formula(self, formula_string):
         pass
 
-    def from_smiles(self, smiles_string):
+    def _to_formula(self):
+        return self['formula']
+
+    def _from_smiles(self, smiles_string):
         def tokenize(smiles_string):
             index = 0
             while index < len(smiles_string):
@@ -97,12 +123,12 @@ class Molecule:
                 if not self.first_atom:
                     self.first_atom = new_atom
                 if active_atom:
-                    self.bonds.append({'atoms': {active_atom, new_atom}, 'type': bond_type})
-                self.atoms.add(new_atom)
+                    self['bonds'].append({'atoms': {active_atom, new_atom}, 'type': bond_type})
+                self['atoms'].add(new_atom)
                 active_atom = new_atom
                 bond_type = ''
             elif isinstance(token, int):
-                self.bonds.append({'atoms': {active_atom, token}, 'type': bond_type})
+                self['bonds'].append({'atoms': {active_atom, token}, 'type': bond_type})
                 bond_type = ''
             elif token in ['=', '#', '$']:
                 bond_type = token
@@ -110,9 +136,9 @@ class Molecule:
                     self.first_bond_type = token
             elif token[0] == '(':
                 side_chain = Molecule(token[1:-1], 'smilesx')
-                self.atoms.update(side_chain.atoms)
-                self.bonds.extend(side_chain.bonds)
-                self.bonds.append({'atoms': {active_atom, side_chain.first_atom}, 'type': side_chain.first_bond_type})
+                self['atoms'].update(side_chain['atoms'])
+                self['bonds'].extend(side_chain['bonds'])
+                self['bonds'].append({'atoms': {active_atom, side_chain.first_atom}, 'type': side_chain.first_bond_type})
             elif token[0] == '[':
                 token = token[1:-1]
                 if token[1].isalpha():
@@ -136,24 +162,43 @@ class Molecule:
                     new_atom.charge = charge
                     chirality = None  # todo
                     if active_atom:
-                        self.bonds.append({'atoms': {active_atom, new_atom}, 'type': bond_type})
-                    self.atoms.add(new_atom)
+                        self['bonds'].append({'atoms': {active_atom, new_atom}, 'type': bond_type})
+                    self['atoms'].add(new_atom)
                     active_atom = new_atom
                     bond_type = ''
 
-    def from_cas(self, cas_string):
+    # todo:
+    def _to_smiles(self):
+        return self['smiles']
+
+    # todo:
+    def _from_cas(self, cas_string):
         pass
 
-    def from_name(self, name):
+    # todo:
+    def _to_cas(self):
+        return self['cas number']
+
+    # todo:
+    def _from_name(self, name):
         pass
 
-    def from_data(self, data):
+    # todo:
+    def _to_name(self):
+        return self['iupac name']
+
+    # todo:
+    def _from_data(self, data):
         def guess_data_type(data):
             if '[' in data:
                 pass
                 # not name or cas
 
-    def longest_chain(self):
+    # todo:
+    def _find_rings(self):
+        pass
+
+    def _find_longest_chain(self):
         def remove_bonds(atoms, bonds):
             new_bonds = list()
             for bond in bonds:
@@ -189,20 +234,16 @@ class Molecule:
                 new_chains = [chain]
             return new_chains
 
-        non_h_atoms = [atom for atom in self.atoms if atom['symbol'] != 'H']
-        non_h_bonds = remove_bonds(non_h_atoms, self.bonds.copy())
+        non_h_atoms = [atom for atom in self['atoms'] if atom['symbol'] != 'H']
+        non_h_bonds = remove_bonds(non_h_atoms, self['bonds'].copy())
 
         all_chains = list()
         for atom in non_h_atoms:
             chain = [atom]
-            atoms_copy = self.atoms.copy()
+            atoms_copy = self['atoms'].copy()
             atoms_copy.remove(atom)
             result = recursive(chain, non_h_bonds.copy())
             all_chains.extend(result)
-            print('result: ' + str(result))
-            print('all_chains:')
-            for chain in all_chains:
-                print('    ' + str(chain))
 
         longest_chains = list()
         longest_chain_len = 0
@@ -218,11 +259,11 @@ class Molecule:
         return longest_chains
 
 
-molecule = Molecule('C=CC(=O)O', 'smiles')
+molecule = Molecule('COC(=O)C(\C)=C\C1C(C)(C)[C@H]1C(=O)O[C@@H]2C(C)=C(C(=O)C2)CC=CC=C', 'smiles')
 # for atom in molecule.atoms:
 #     print(atom['name'])
-# molecule.draw_2d()
-for chain in molecule.longest_chain():
+molecule.draw_2d()
+for chain in molecule['longest chain']:
     print('returned chain: ', str(chain))
     # print(len(chain))
 
