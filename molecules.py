@@ -1,4 +1,5 @@
 from atoms import Atom
+import gui
 
 # todo: verify whether a molecule is valid or not; octet rule and stuff...
 # todo: calculate resonance structures
@@ -14,7 +15,7 @@ class Molecule:
         :param data_type: The molecule data type (see examples)
         examples for formula: 'Al2(SO4)3', 'CO2'
         example for smiles: [Al+3].[O-]S(=O)(=O)[O-]O-C-O
-        examples for IUPAC: 'aluminium sulfate', 'carbon dioxide'
+        examples for name (iupac conventions): 'aluminium sulfate', 'carbon dioxide'
         examples for CAS: '10043-01-3', '124-38-9'
         """
         self.atoms = set()
@@ -34,6 +35,10 @@ class Molecule:
 
     def __str__(self):
         pass
+
+    def draw_2d(self):
+        canvas = gui.Canvas()
+        canvas.draw_molecule(self)
 
     def check_molecule(self):
         pass
@@ -85,9 +90,10 @@ class Molecule:
         active_atom = None
         bond_type = ''
         for token in tokenize(smiles_string):
-            print(token)
-            if token in ['B', 'C', 'N', 'O', 'P', 'S', 'F', 'Cl', 'Br', 'I']:
+            if token.lower() in ['b', 'c', 'n', 'o', 'p', 's', 'f', 'cl', 'br', 'i']:
                 new_atom = Atom(token)
+                if token in ['b', 'c', 'n', 'o', 'p', 's', 'f', 'cl', 'br', 'i']:
+                    new_atom.aromatic = True
                 if not self.first_atom:
                     self.first_atom = new_atom
                 if active_atom:
@@ -147,12 +153,84 @@ class Molecule:
                 pass
                 # not name or cas
 
+    def longest_chain(self):
+        def remove_bonds(atoms, bonds):
+            new_bonds = list()
+            for bond in bonds:
+                do_not_add = False
+                for atom in bond['atoms']:
+                    if atom not in atoms:
+                        do_not_add = True
+                        break
+                if not do_not_add:
+                    new_bonds.append(bond)
+            return new_bonds
 
-for atom in Molecule('[Cu+2].[O-]S(=O)(=O)[O-]', 'smiles').atoms:
-    print(atom['name'])
+        def recursive(chain, bonds):
+            longest_chains = list()
+            last_atom = chain[-1]
+            for bond in bonds:
+                if last_atom in bond['atoms']:
+                    bond['atoms'].remove(last_atom)
+                    new_atom = bond['atoms'].pop()
 
+                    not_good = False
+                    for atom in chain:
+                        if new_atom is atom:
+                            not_good = True
+                            break
+                    if not_good:
+                        break
+
+                    new_bonds = bonds.copy()
+                    new_bonds.remove(bond)
+                    new_chain = chain.copy()
+                    new_chain.append(new_atom)
+
+                    chains = recursive(new_chain, new_bonds)
+                    if chains:
+                        if not longest_chains:
+                            longest_chains = chains
+                        elif len(longest_chains[0]) < len(chains[0]):
+                            longest_chains = chains
+                        elif len(longest_chains[0]) == len(chains[0]):
+                            longest_chains.extend(chain)
+            if longest_chains:
+                return longest_chains
+            else:
+                return [chain]
+
+        non_h_atoms = [atom for atom in self.atoms if atom['symbol'] != 'H']
+        non_h_bonds = remove_bonds(non_h_atoms, self.bonds.copy())
+        longest_chains = list()
+        for atom in non_h_atoms:
+            atoms_copy = non_h_atoms.copy()
+            atoms_copy.remove(atom)
+            chains = recursive([atom], non_h_bonds)
+            # print('chains: ' + str(chains))
+            # print('longest chains: ' + str(longest_chains))
+            if chains:
+                if not longest_chains:
+                    longest_chains = chains
+                elif len(longest_chains[0]) < len(chains[0]):
+                    longest_chains = chains
+                elif len(longest_chains[0]) == len(chains[0]):
+                    longest_chains.extend(chains)
+        return longest_chains
+
+
+molecule = Molecule('C=CC(=O)O', 'smiles')
+# for atom in molecule.atoms:
+#     print(atom['name'])
+# molecule.draw_2d()
+for chain in molecule.longest_chain():
+    print('returned chains: ', str(chain))
+    # print(len(chain))
+
+# C=CC(=O)O
 # COC(=O)C(\C)=C\C1C(C)(C)[C@H]1C(=O)O[C@@H]2C(C)=C(C(=O)C2)CC=CC=C
-# '[Cu+2].[O-]S(=O)(=O)[O-]')
+# O1C=C[C@H]([C@H]1O2)c3c2cc(OC)c4c3OC(=O)C5=C4CCC(=O)5
+# [Cu+2].[O-]S(=O)(=O)[O-]
 # CC(=O)C
 # Molecule(formula='NaCO3')
-# 'CH3COOH'
+# CH3COOH = CC(=O)O
