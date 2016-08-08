@@ -167,55 +167,54 @@ class Molecule:
             return new_bonds
 
         def recursive(chain, bonds):
-            longest_chains = list()
-            last_atom = chain[-1]
-            for bond in bonds:
+            other_atoms = list()
+            new_bonds = list()
+            for bond in bonds.copy():
+                last_atom = chain[-1]
                 if last_atom in bond['atoms']:
-                    bond['atoms'].remove(last_atom)
-                    new_atom = bond['atoms'].pop()
-
-                    not_good = False
-                    for atom in chain:
-                        if new_atom is atom:
-                            not_good = True
-                            break
-                    if not_good:
-                        break
-
-                    new_bonds = bonds.copy()
-                    new_bonds.remove(bond)
+                    bond_copy = bond.copy()
+                    atoms_copy = bond_copy['atoms'].copy()
+                    atoms_copy.remove(last_atom)
+                    other_atom = atoms_copy.pop()
+                    other_atoms.append(other_atom)
+                else:
+                    new_bonds.append(bond)
+            if other_atoms:
+                new_chains = list()
+                for atom in other_atoms:
                     new_chain = chain.copy()
-                    new_chain.append(new_atom)
-
-                    chains = recursive(new_chain, new_bonds)
-                    if chains:
-                        if not longest_chains:
-                            longest_chains = chains
-                        elif len(longest_chains[0]) < len(chains[0]):
-                            longest_chains = chains
-                        elif len(longest_chains[0]) == len(chains[0]):
-                            longest_chains.extend(chain)
-            if longest_chains:
-                return longest_chains
+                    new_chain.append(atom)
+                    new_chains.extend(recursive(new_chain, new_bonds))
             else:
-                return [chain]
+                new_chains = [chain]
+            return new_chains
 
         non_h_atoms = [atom for atom in self.atoms if atom['symbol'] != 'H']
         non_h_bonds = remove_bonds(non_h_atoms, self.bonds.copy())
-        longest_chains = list()
+
+        all_chains = list()
         for atom in non_h_atoms:
-            atoms_copy = non_h_atoms.copy()
+            chain = [atom]
+            atoms_copy = self.atoms.copy()
             atoms_copy.remove(atom)
-            chains = recursive([atom], non_h_bonds)
-            # print('chains: ' + str(chains))
-            # print('longest chains: ' + str(longest_chains))
-            if chains:
-                if not longest_chains:
-                    longest_chains = chains
-                elif len(longest_chains[0]) < len(chains[0]):
-                    longest_chains = chains
-                elif len(longest_chains[0]) == len(chains[0]):
-                    longest_chains.extend(chains)
+            result = recursive(chain, non_h_bonds.copy())
+            all_chains.extend(result)
+            print('result: ' + str(result))
+            print('all_chains:')
+            for chain in all_chains:
+                print('    ' + str(chain))
+
+        longest_chains = list()
+        longest_chain_len = 0
+        for chain in all_chains:
+            if len(chain) == longest_chain_len:
+                longest_chains.append(chain)
+            if len(chain) > longest_chain_len:
+                longest_chains = [chain]
+                longest_chain_len = len(chain)
+
+        # todo: find best longest chain
+
         return longest_chains
 
 
@@ -224,7 +223,7 @@ molecule = Molecule('C=CC(=O)O', 'smiles')
 #     print(atom['name'])
 # molecule.draw_2d()
 for chain in molecule.longest_chain():
-    print('returned chains: ', str(chain))
+    print('returned chain: ', str(chain))
     # print(len(chain))
 
 # C=CC(=O)O
