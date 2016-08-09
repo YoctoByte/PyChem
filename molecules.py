@@ -7,6 +7,14 @@ import gui
 # todo: lookup CAS number in some database
 
 
+class Bond:
+    def __init__(self, type='', atoms=set(), energy=None, length=None):
+        self.type = type
+        self.atoms = atoms # todo: self.atoms = set(atoms)
+        self.energy = energy
+        self.length = length
+
+
 class Molecule:
     def __init__(self, molecule_data, data_type=None):
         """
@@ -19,7 +27,7 @@ class Molecule:
         """
         self.properties = dict()
         self['atoms'] = set()
-        self['bonds'] = list()
+        self['bonds'] = set()
         self['rings'] = None
         self['longest chain'] = None
         self['iupac name'] = None
@@ -47,11 +55,13 @@ class Molecule:
         self.properties[key] = value
 
     def __getitem__(self, item):
-        if item == 'longest chain' and not self.properties[item]:
+        if item == 'longest chain' and self.properties[item] is None:
             self[item] = self._find_longest_chain()
-        if item == 'smiles' and not self.properties[item]:
+        elif item == 'rings' and self.properties[item] is None:
+            self[item] = self._find_rings()
+        elif item == 'smiles' and not self.properties[item]:
             self[item] = self._to_smiles()
-        if item == 'formula' and not self.properties[item]:
+        elif item == 'formula' and not self.properties[item]:
             self[item] = self._to_formula()
         return self.properties[item]
 
@@ -106,7 +116,23 @@ class Molecule:
                     index += 1
 
         def connect_bonds():
-            pass
+            labels = dict()
+            new_bonds = set()
+            bonds_to_remove = set()
+            for bond in self['bonds']:
+                for label in bond.atoms:
+                    if isinstance(label, str):
+                        atoms_copy = bond.atoms.copy()
+                        atoms_copy.remove(label)
+                        atom = atoms_copy.pop()
+                        if label not in labels:
+                            labels[label] = atom
+                        else:
+                            new_bonds.add(Bond(atoms={atom, labels[label]}))
+                        bonds_to_remove.add(bond)
+            self['bonds'].update(new_bonds)
+            for bond in bonds_to_remove:
+                self['bonds'].remove(bond)
 
         def fill_hydrogen():
             pass
@@ -123,12 +149,12 @@ class Molecule:
                 if not self.first_atom:
                     self.first_atom = new_atom
                 if active_atom:
-                    self['bonds'].append({'atoms': {active_atom, new_atom}, 'type': bond_type})
+                    self['bonds'].add(Bond(atoms={active_atom, new_atom}, type=bond_type))
                 self['atoms'].add(new_atom)
                 active_atom = new_atom
                 bond_type = ''
-            elif isinstance(token, int):
-                self['bonds'].append({'atoms': {active_atom, token}, 'type': bond_type})
+            elif token in '0123456789':
+                self['bonds'].add(Bond(atoms={active_atom, token}, type=bond_type))
                 bond_type = ''
             elif token in ['=', '#', '$']:
                 bond_type = token
@@ -137,8 +163,8 @@ class Molecule:
             elif token[0] == '(':
                 side_chain = Molecule(token[1:-1], 'smilesx')
                 self['atoms'].update(side_chain['atoms'])
-                self['bonds'].extend(side_chain['bonds'])
-                self['bonds'].append({'atoms': {active_atom, side_chain.first_atom}, 'type': side_chain.first_bond_type})
+                self['bonds'].update(side_chain['bonds'])
+                self['bonds'].add(Bond(atoms={active_atom, side_chain.first_atom}, type=side_chain.first_bond_type))
             elif token[0] == '[':
                 token = token[1:-1]
                 if token[1].isalpha():
@@ -162,10 +188,12 @@ class Molecule:
                     new_atom.charge = charge
                     chirality = None  # todo
                     if active_atom:
-                        self['bonds'].append({'atoms': {active_atom, new_atom}, 'type': bond_type})
+                        self['bonds'].add(Bond(atoms={active_atom, new_atom}, type=bond_type))
                     self['atoms'].add(new_atom)
                     active_atom = new_atom
                     bond_type = ''
+        connect_bonds()
+        fill_hydrogen()
 
     # todo:
     def _to_smiles(self):
@@ -194,78 +222,166 @@ class Molecule:
                 pass
                 # not name or cas
 
-    # todo:
     def _find_rings(self):
-        pass
-
-    def _find_longest_chain(self):
-        def remove_bonds(atoms, bonds):
-            new_bonds = list()
+        def remove_unused_bonds(atoms, bonds):
+            new_bonds = set()
             for bond in bonds:
                 do_not_add = False
-                for atom in bond['atoms']:
+                for atom in bond.atoms:
                     if atom not in atoms:
                         do_not_add = True
                         break
                 if not do_not_add:
-                    new_bonds.append(bond)
+                    new_bonds.add(bond)
             return new_bonds
 
-        def recursive(chain, bonds):
-            other_atoms = list()
-            new_bonds = list()
-            for bond in bonds.copy():
-                last_atom = chain[-1]
-                if last_atom in bond['atoms']:
-                    bond_copy = bond.copy()
-                    atoms_copy = bond_copy['atoms'].copy()
-                    atoms_copy.remove(last_atom)
-                    other_atom = atoms_copy.pop()
-                    other_atoms.append(other_atom)
+        def remove_end_atoms(atoms, bonds):
+            new_atoms = set()
+            nr_removed_atoms = 0
+            for atom in atoms:
+                bond_count = 0
+                for bond in bonds:
+                    if atom in bond.atoms:
+                        bond_count += 1
+                if bond_count >= 2:
+                    new_atoms.add(atom)
                 else:
-                    new_bonds.append(bond)
-            if other_atoms:
-                new_chains = list()
-                for atom in other_atoms:
-                    new_chain = chain.copy()
-                    new_chain.append(atom)
-                    new_chains.extend(recursive(new_chain, new_bonds))
+                    nr_removed_atoms += 1
+            return new_atoms, nr_removed_atoms
+
+        def recursive(current_chain, bonds):
+            surrounding_atoms = list()
+            for bond in bonds:
+                current_atom = current_chain[-1]
+                if current_atom in bond.atoms:
+                    atoms_copy = bond.atoms.copy()
+                    atoms_copy.remove(current_atom)
+                    other_atom = atoms_copy.pop()
+                    if other_atom not in current_chain:
+                        surrounding_atoms.append(other_atom)
+            if chain[0] in surrounding_atoms:
+                finished_rings = [chain]
+            elif not surrounding_atoms:
+                finished_rings = []
             else:
-                new_chains = [chain]
-            return new_chains
+                finished_rings = list()
+                for atom in surrounding_atoms:
+                    chain_copy = current_chain.copy()
+                    chain_copy.append(atom)
+                    finished_rings.extend(recursive(chain_copy, bonds))
+            return finished_rings
+
+        # remove all atoms and bonds that are not part of a ring:
+        cyclic_atoms = [atom for atom in self['atoms'] if atom['symbol'] != 'H']
+        cyclic_bonds = remove_unused_bonds(cyclic_atoms, self['bonds'].copy())
+        while True:
+            cyclic_atoms, nr_removed = remove_end_atoms(cyclic_atoms, cyclic_bonds)
+            cyclic_bonds = remove_unused_bonds(cyclic_atoms, cyclic_bonds)
+            if nr_removed == 0:
+                break
+
+        # find all possible rings:
+        all_rings = list()
+        for atom in cyclic_atoms:
+            chain = [atom]
+            all_rings.extend(recursive(chain, cyclic_bonds.copy()))
+
+        # filter only unique rings out:
+        unique_ring_sets = list()
+        unique_rings = list()
+        for ring in all_rings:
+            ring_set = set()
+            for atom in ring:
+                ring_set.add(atom)
+            new_ring = True
+            for unique_ring_set in unique_ring_sets:
+                if ring_set == unique_ring_set:
+                    new_ring = False
+                    break
+            if new_ring:
+                unique_ring_sets.append(ring_set)
+                unique_rings.append(ring)
+        return unique_rings
+
+    def _find_longest_chain(self):
+        def remove_unused_bonds(atoms, bonds):
+            new_bonds = set()
+            for bond in bonds:
+                do_not_add = False
+                for atom in bond.atoms:
+                    if atom not in atoms:
+                        do_not_add = True
+                        break
+                if not do_not_add:
+                    new_bonds.add(bond)
+            return new_bonds
+
+        def recursive(current_chain, bonds):
+            print('current chain: ' + str(current_chain))
+            surrounding_atoms = list()
+            remaining_bonds = set()
+            for bond in bonds.copy():
+                current_atom = current_chain[-1]
+                if current_atom in bond.atoms:
+                    atoms_copy = bond.atoms.copy()
+                    atoms_copy.remove(current_atom)
+                    other_atom = atoms_copy.pop()
+                    surrounding_atoms.append(other_atom)
+                else:
+                    remaining_bonds.add(bond)
+            if surrounding_atoms:
+                finished_chains = list()
+                for atom in surrounding_atoms:
+                    chain_copy = current_chain.copy()
+                    chain_copy.append(atom)
+                    finished_chains.extend(recursive(chain_copy, remaining_bonds))
+            else:
+                finished_chains = [current_chain]
+            return finished_chains
 
         non_h_atoms = [atom for atom in self['atoms'] if atom['symbol'] != 'H']
-        non_h_bonds = remove_bonds(non_h_atoms, self['bonds'].copy())
+        non_h_bonds = remove_unused_bonds(non_h_atoms, self['bonds'].copy())
 
         all_chains = list()
         for atom in non_h_atoms:
             chain = [atom]
-            atoms_copy = self['atoms'].copy()
-            atoms_copy.remove(atom)
             result = recursive(chain, non_h_bonds.copy())
             all_chains.extend(result)
+            print(result)
 
         longest_chains = list()
         longest_chain_len = 0
+        longest_carbon_chains = list()
+        longest_carbon_chain_len = 0
         for chain in all_chains:
             if len(chain) == longest_chain_len:
                 longest_chains.append(chain)
             if len(chain) > longest_chain_len:
                 longest_chains = [chain]
                 longest_chain_len = len(chain)
+            if chain[0]['symbol'] == 'C' and chain[-1]['symbol'] == 'C':
+                if len(chain) == longest_carbon_chain_len:
+                    longest_carbon_chains.append(chain)
+                if len(chain) > longest_carbon_chain_len:
+                    longest_carbon_chains = [chain]
+                    longest_carbon_chain_len = len(chain)
 
         # todo: find best longest chain
 
-        return longest_chains
+        if longest_carbon_chains:
+            return longest_carbon_chains
+        else:
+            return longest_chains
 
 
-molecule = Molecule('COC(=O)C(\C)=C\C1C(C)(C)[C@H]1C(=O)O[C@@H]2C(C)=C(C(=O)C2)CC=CC=C', 'smiles')
+molecule = Molecule('O1C=C[C@H]([C@H]1O2)c3c2cc(OC)c4c3OC(=O)C5=C4CCC(=O)5', 'smiles')
 # for atom in molecule.atoms:
 #     print(atom['name'])
-molecule.draw_2d()
-for chain in molecule['longest chain']:
-    print('returned chain: ', str(chain))
+# molecule.draw_2d()
+for ring in molecule['rings']:
+    print('returned chain: ', str(ring))
     # print(len(chain))
+
 
 # C=CC(=O)O
 # COC(=O)C(\C)=C\C1C(C)(C)[C@H]1C(=O)O[C@@H]2C(C)=C(C(=O)C2)CC=CC=C

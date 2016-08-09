@@ -33,9 +33,9 @@ class Canvas(tk.Tk):
                 self.atom_reference = atom
                 self.position = pos
 
-        def draw_atoms_and_bonds(atoms, bonds):
-            for atom in atoms:
-                self.canvas.create_text(atom.position, text=atom.symbol)
+        def draw_atoms_and_bonds(gatoms, bonds):
+            for gatom in gatoms:
+                self.canvas.create_text(gatom.position, text=gatom.symbol)
             for bond in bonds:
                 if bond['type'] == '':
                     self.canvas.create_line(bond['line'])
@@ -48,14 +48,14 @@ class Canvas(tk.Tk):
 
         atoms = list()  # list of dicts
         bonds = list()  # list of dicts
-        pos = (50, 100)
+        pos = (25, 87)
         angle = 30
         longest_chain = molecule['longest chain'][0]
         previous_atom = None
         for atom in longest_chain:
             x, y = pos
             x += BOND_LENGTH * cos(angle/180*pi)
-            y += -(BOND_LENGTH * sin(angle/180*pi))
+            y += (BOND_LENGTH * sin(angle/180*pi))
             pos = (x, y)
             if angle > 0:
                 angle -= 60

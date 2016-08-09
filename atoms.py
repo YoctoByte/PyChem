@@ -86,6 +86,10 @@ def load_data():
         try:
             number_lookup[element['name']] = element['z']
             number_lookup[element['symbol']] = element['z']
+            try:
+                number_lookup[element['symbol'].lower()] = element['z']
+            except AttributeError:
+                pass
         except KeyError:
             print(element)
     number_lookup[None] = -1
