@@ -1,5 +1,5 @@
 from decimal import Decimal
-from random import choice, random
+# from random import choice, random
 from math import sqrt, asin, acos, atan, sin, cos, tan, pi
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
@@ -12,39 +12,41 @@ Ke = Decimal('8.9875517873681764e9')    # Coulomb's constant (N*m2*C-2)
 u = Decimal('1.660539040e-27')          # atomic mass unit (kilograms)
 e = Decimal('1.6021766e-19')            # elementary charge (Coulomb)
 eV = Decimal('1.6021766e-19')           # electronvolt (Joule)
-delta_t = Decimal('100e-22')              # seconds
+delta_t = Decimal('1000e-22')            # seconds
+
 
 particles = set()
 
-class Electron:
-    def __init__(self):
-        self.mass = Decimal('5.48579909070e-4') * u  # mass in kg
-        self.radius = Decimal('0.8751e-15')
-        self.position = (Decimal(choice('0123456789') + 'e-13'),
-                         Decimal(choice('0123456789') + 'e-13'),
-                         Decimal(choice('0123456789') + 'e-13'))  # (x, y, z) in meters
-        self.charge = -e
-        self.energy_goal = 13 * eV
-        self.velocity = Decimal(sqrt(2*self.energy_goal/self.mass))
-        self.direction = (Decimal(2 * pi * random()), 2 * pi * random())  # in (xy_angle, z_angle)
 
-
-class Atom:
-    def __init__(self):
-        self.mass = Decimal('1.00782504') * u  # mass in kg
-        self.position = (Decimal('0'), Decimal('0'), Decimal('0'))  # (x, y, z) in meters
-        self.charge = e
-        self.velocity = Decimal('0')
-        self.direction = (Decimal('0'), Decimal('0'))  # in (xy_angle, z_angle)
+class Particle:
+    def __init__(self, position=(Decimal('0'), Decimal('0'), Decimal('0')),
+                 mass=u,
+                 charge=Decimal('0'),
+                 velocity=Decimal('0'),
+                 direction=(Decimal('0'), Decimal('0'))):
+        particles.add(self)
+        self.position = position
+        self.mass = mass
+        # self.radius = Decimal('0.8751e-15')
+        self.charge = charge
+        # self.energy_goal = 13 * eV
+        self.velocity = velocity
+        self.direction = direction
 
 
 def simulation():
     def coulombs_law(c1, c2, r):
-        F = Ke*c1*c2/(r*r)
+        if r != 0:
+            F = Decimal(Ke*c1*c2/(r*r))
+        else:
+            F = None
         return F
 
-    def gravitaional_force(m1, m2, r):
-        F = G*m1*m2/(r*r)
+    def gravitional_force(m1, m2, r):
+        if r != 0:
+            F = Decimal(G*m1*m2/(r*r))
+        else:
+            F = None
         return F
 
     def get_angle(a=None, o=None, s=None):
@@ -73,108 +75,107 @@ def simulation():
         else:
             raise ValueError
 
-    atom = Atom()
-    electron = Electron()
-
     data = dict()
-    data['positions'] = list()
-    data['distances'] = list()
-    data['velocities'] = list()
-    initial_conditions = dict()
-    initial_conditions['delta time'] = float(delta_t)
-    initial_conditions['electron velocity'] = float(electron.velocity)
-    x, y, z = electron.position
-    initial_conditions['electron position'] = (float(x), float(y), float(z))
-    xy, z = electron.direction
-    initial_conditions['electron direction'] = (float(xy), float(z))
-    data['initial conditions'] = initial_conditions
-    for _ in range(500):
-        # print('--------')
-        xe, ye, ze = electron.position
-        xa, ya, za = atom.position
-        dx, dy, dz = abs(xe-xa), abs(ye-ya), abs(ze-za)
-        r = Decimal(sqrt(dx*dx + dy*dy + dz*dz))
-        dx, dy, dz = xe-xa, ye-ya, ze-za
-        xy_angle = get_angle(a=dx, o=dy)
-        xy_r = Decimal(sqrt(dx*dx + dy*dy))
-        z_angle = get_angle(a=xy_r, o=dz)
+    for particle in particles:
+        data[particle] = dict()
+        data[particle]['positions'] = list()
+        data[particle]['velocities'] = list()
 
-        Fg = gravitaional_force(electron.mass, atom.mass, r)
-        Fe = coulombs_law(electron.charge, atom.charge, r)
-        Ftot = Fe + Fg
-        a_electron = Ftot/electron.mass
-        a_atom = Ftot/atom.mass
+    for _ in range(300):
+        print('--------')
+        for particle in particles:
+            print('---')
+            print('position: ' + str(particle.position))
+            print('velocity: ' + str(particle.velocity))
+            print('direction: ' + str(particle.direction))
+            current_x, current_y, current_z = particle.position
+            current_v = particle.velocity
+            current_xy_angle, current_z_angle = particle.direction
+            current_v_x = Decimal(current_v * Decimal(cos(current_xy_angle)) * Decimal(cos(current_z_angle)))
+            current_v_y = Decimal(current_v * Decimal(sin(current_xy_angle)) * Decimal(cos(current_z_angle)))
+            current_v_z = Decimal(current_v * Decimal(cos(current_z_angle)))
+            if current_z_angle == 0.5 * pi:
+                current_v_z = current_v
+            if current_z_angle in [1.5 * pi, (-0.5) * pi]:
+                current_v_z = -current_v
 
-        delta_v_electron = a_electron * delta_t
-        velocity = electron.velocity
-        xy_dir, z_dir = electron.direction
-        x_vel = Decimal(velocity * Decimal(cos(xy_dir)) * Decimal(sin(z_dir)))
-        y_vel = Decimal(velocity * Decimal(sin(xy_dir)) * Decimal(sin(z_dir)))
-        z_vel = Decimal(velocity * Decimal(sin(z_dir)))
-        delta_x_vel = Decimal(-delta_v_electron * Decimal(cos(xy_angle)) * Decimal(sin(z_angle)))
-        delta_y_vel = Decimal(-delta_v_electron * Decimal(sin(xy_angle)) * Decimal(sin(z_angle)))
-        delta_z_vel = Decimal(-delta_v_electron * Decimal(sin(z_angle)))
-        new_x_vel = Decimal(x_vel - delta_x_vel)
-        new_y_vel = Decimal(y_vel - delta_y_vel)
-        new_z_vel = Decimal(z_vel - delta_z_vel)
-        new_xe = Decimal(xe + new_x_vel * delta_t)
-        new_ye = Decimal(ye + new_y_vel * delta_t)
-        new_ze = Decimal(ze + new_z_vel * delta_t)
-        electron.position = (new_xe, new_ye, new_ze)
-        electron.velocity = Decimal(sqrt(new_x_vel*new_x_vel + new_y_vel*new_y_vel + new_z_vel*new_z_vel))
-        new_xy_dir = get_angle(a=new_x_vel, o=new_y_vel)
-        new_xy_vel = Decimal(sqrt(new_x_vel*new_x_vel + new_y_vel*new_y_vel))
-        new_z_dir = get_angle(a=new_xy_vel, o=new_z_vel)
-        electron.direction = (new_xy_dir, new_z_dir)
-        # print('vel: ' + str(electron.velocity))
-        # print('pos: ' + str(electron.position))
-        # print('dis: ' + str(r))
-        data['positions'].append((float(new_xe*Decimal('1e12')),
-                                  float(new_ye*Decimal('1e12')),
-                                  float(new_ze*Decimal('1e12'))))
-        data['velocities'].append(float(electron.velocity))
-        data['distances'].append(float(r))
+            # calculate the next position of the particle:
+            for other_particle in particles:
+                if other_particle != particle:
+                    other_x, other_y, other_z = other_particle.position
+                    dx, dy, dz = other_x-current_x, other_y-current_y, other_z-current_z
+                    distance = Decimal(sqrt(dx*dx + dy*dy + dz*dz))
 
-        # delta_v_atom = a_atom * delta_t
+                    fg = gravitional_force(particle.mass, other_particle.mass, distance)
+                    fe = -coulombs_law(particle.charge, other_particle.charge, distance)
+                    ftot = fg + fe
+
+                    print('fg: ' + str(fg))
+                    print('fe: ' + str(fe))
+
+                    xy_angle = get_angle(a=dx, o=dy)
+                    xy_distance = Decimal(sqrt(dx*dx + dy*dy))
+                    z_angle = get_angle(a=xy_distance, o=dz)
+                    acceleration = ftot/particle.mass
+                    delta_v = Decimal(acceleration*delta_t)
+                    delta_v_x = Decimal(delta_v * Decimal(cos(xy_angle)) * Decimal(sin(z_angle)))
+                    delta_v_y = Decimal(delta_v * Decimal(sin(xy_angle)) * Decimal(sin(z_angle)))
+                    delta_v_z = Decimal(delta_v * Decimal(sin(z_angle)))
+
+                    current_v_x += delta_v_x
+                    current_v_y += delta_v_y
+                    current_v_z += delta_v_z
+
+            next_x = Decimal(current_x + current_v_x * delta_t)
+            next_y = Decimal(current_y + current_v_y * delta_t)
+            next_z = Decimal(current_z + current_v_z * delta_t)
+            particle.next_position = (next_x, next_y, next_z)
+            particle.next_velocity = Decimal(sqrt(current_v_x*current_v_x + current_v_y*current_v_y + current_v_z*current_v_z))
+            current_v_xy = Decimal(sqrt(current_v_x*current_v_x + current_v_y*current_v_y))
+            particle.next_direction = (get_angle(a=current_v_x, o=current_v_y), get_angle(a=current_v_xy, o=current_v_z))
+
+        # applying all the calculated positions to the particle
+        for particle in particles:
+            particle.position = particle.next_position
+            particle.velocity = particle.next_velocity
+            particle.direction = particle.next_direction
+
+            current_x, current_y, current_z = particle.position
+            data[particle]['positions'].append((float(current_x*Decimal('1e12')),
+                                                float(current_y*Decimal('1e12')),
+                                                float(current_z*Decimal('1e12'))))
     return data
 
 
 def plot_3d(data):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
-    xs = list()
-    ys = list()
-    zs = list()
-    for x, y, z in data['positions']:
-        xs.append(float(x))
-        ys.append(float(y))
-        zs.append(float(z))
-    ax.scatter(xs, ys, zs)
-
-    ax.set_xlabel('X Label')
-    ax.set_ylabel('Y Label')
-    ax.set_zlabel('Z Label')
-
+    for key in data:
+        xs = list()
+        ys = list()
+        zs = list()
+        for x, y, z in data[key]['positions']:
+            xs.append(float(x))
+            ys.append(float(y))
+            zs.append(float(z))
+        ax.scatter(xs, ys, zs)
     plt.show()
 
+# create hydrogen atom:
+Particle(position=(Decimal('0'), Decimal('0'), Decimal('0')),
+         mass=Decimal('1.00782504') * u,
+         charge=e,
+         velocity=Decimal('0'),
+         direction=(Decimal('0'), Decimal('0')))
+
+# create electron:
+Particle(position=(Decimal('11e-12'), Decimal('7e-12'), Decimal('3e-12')),
+         mass=Decimal('5.4857991e-4') * u,
+         charge=-e,
+         velocity=Decimal('2e3'),
+         direction=(Decimal(179/180 * pi), Decimal('0')))
 
 data = simulation()
-with open('files/esim_data/' + str(time.time()) + '.json', 'w') as jsonfile:
-    json.dump(data, jsonfile, separators=(',', ':'), indent=4)
+# with open('files/esim_data/' + str(time.time()) + '.json', 'w') as jsonfile:
+#     json.dump(data, jsonfile, separators=(',', ':'), indent=4)
 plot_3d(data)
-
-
-def plot_2d(xs, ys):
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-    ax.scatter(xs, ys)
-    ax.set_xlabel('X Label')
-    ax.set_ylabel('Y Label')
-    plt.show()
-
-# for a in range(589):
-#     angle = a/587 * 2 * pi
-#     x = cos(angle)
-#     y = sin(angle)
-#     new_angle = get_angle(a=x, o=y)
-#     print(angle, new_angle)
