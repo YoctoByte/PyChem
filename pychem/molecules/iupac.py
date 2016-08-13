@@ -4,7 +4,8 @@ import os
 parent_dir = os.path.split(os.path.dirname(__file__))[0]
 DATA_DIR = parent_dir + '/data/iupac/'
 
-CARBON_PREFIXES = None
+with open(DATA_DIR + 'carbon_prefixes.json') as jf:
+    CARBON_PREFIXES = json.load(jf)
 
 
 def parse_from(molecule, name_string):
@@ -31,13 +32,10 @@ def _find_side_chains(molecule, parent_chain):
     pass
 
 
-def _load_carbon_prefixes():
-    with open(DATA_DIR + 'carbon_prefixes.json') as jf:
-        carbon_prefixes = json.load(jf)
-    for _, prefix in carbon_prefixes.items():
-        print(prefix)
-    with open(DATA_DIR + 'carbon_prefixes2.json', 'w') as jf:
-        json.dump(carbon_prefixes, jf, separators=(',', ':'), indent=2, sort_keys=True)
+def _load_data_files():
+    pass
+    # with open(DATA_DIR + 'carbon_prefixes2.json', 'w') as jf:
+    #     json.dump(carbon_prefixes, jf, separators=(',', ':'), indent=2, sort_keys=True)
 
 
-_load_carbon_prefixes()
+_load_data_files()

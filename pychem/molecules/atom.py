@@ -10,7 +10,7 @@ number_lookup = dict()
 
 
 class Atom:
-    def __init__(self, element, charge=0, chirality=None):
+    def __init__(self, element, charge=0, chirality=None, isotope=None, aromatic=False):
         """
         :param element: the atom number, name or symbol of the element.
         """
@@ -18,6 +18,8 @@ class Atom:
         self.chirality = chirality
         self.charge = charge
         self.aromatic = False
+        self.isotope = isotope
+        self.aromatic = aromatic
 
     def __getitem__(self, item):
         if item == 'valence electrons':

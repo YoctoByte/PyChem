@@ -2,79 +2,61 @@ from pychem.molecules.atom import Atom
 from pychem.molecules.bond import Bond
 
 
-def parse_from(molecule, smiles_string):
+def parse_from(smiles_string, active_atom=None, labels=None):
     # todo: process / and \ , ie: F/C=C/Cl
     # todo: process chirality, ie: @/@@, AL/TH, 1/2
-    # todo: process hydrogen count
+    # todo: include * in molecule
+    # todo: aromatic rings
 
-    atoms = set()
     bonds = set()
+    atoms = set()
 
-    if molecule is None:
-        is_side_chain = True
-    else:
-        is_side_chain = False
-    first_atom = None
-    first_bond_type = '-'
+    if labels is None:
+        labels = dict()
 
-    active_atom = None
     bond_type = '-'
     for token in _tokenize(smiles_string):
-        if token.lower() in ['b', 'c', 'n', 'o', 'p', 's', 'f', 'cl', 'br', 'i']:
-            new_atom = Atom(token)
-            if token in ['b', 'c', 'n', 'o', 'p', 's', 'f', 'cl', 'br', 'i']:
-                new_atom.aromatic = True
-            if not first_atom:
-                first_atom = new_atom
+        print(token)
+        if token[0] == '(':
+            new_bonds, new_atoms = parse_from(token[1:-1], active_atom=active_atom, labels=labels)
+            atoms.update(new_atoms)
+            bonds.update(new_bonds)
+        elif token[0] == '[':
+            # todo: process chirality, ie: @/@@, AL/TH, 1/2
+            # TH: Tetrahedral, AL: Allenal, SP: Square Planar, TB: Trigonal Bipyramidal, OH: Octahedral
+            isotope, element, h_count, charge, chirality = _parse_parenthesis(token)
+            new_atom = Atom(element, isotope=isotope, charge=charge, aromatic=element.islower())
+            new_atom.h_count = h_count
+            if active_atom:
+                bonds.add(Bond(atoms={active_atom, new_atom}, bond_type=bond_type))
+            atoms.add(new_atom)
+            active_atom = new_atom
+            bond_type = '-'
+        elif token.lower() in ['b', 'c', 'n', 'o', 'p', 's', 'f', 'cl', 'br', 'i']:
+            new_atom = Atom(token, aromatic=token.islower())
+            new_atom.h_count = -1
             if active_atom:
                 bonds.add(Bond(atoms={active_atom, new_atom}, bond_type=bond_type))
             atoms.add(new_atom)
             active_atom = new_atom
             bond_type = '-'
         elif token[0] == '%':
-            bonds.add(Bond(atoms={active_atom, token[1:]}, bond_type=bond_type))
-            bond_type = '-'
+            label = token[1:]
+            if label not in labels:
+                labels[label] = active_atom
+            else:
+                bonds.add(Bond(atoms={active_atom, labels[label]}, bond_type=bond_type))
+                bond_type = '-'
         elif token in ['-', '=', '#', '$', ':']:  # todo: process / and \ , ie: F/C=C/Cl
             bond_type = token
-            if not first_atom:
-                first_bond_type = token
-        elif token[0] == '(':
-            side_chain = parse_from(None, token[1:-1])
-            atoms.update(side_chain['atoms'])
-            bonds.update(side_chain['bonds'])
-            bonds.add(Bond(atoms={active_atom, side_chain['first_atom']}, bond_type=side_chain['first_bond_type']))
-        elif token[0] == '[':
-            isotope, element, h_count, charge, chirality = _parse_parenthesis(token)
-            new_atom = Atom(element)
-            if isotope:
-                new_atom.isotope = isotope
-            if charge:
-                new_atom.charge = charge
-            if element in ['b', 'c', 'n', 'o', 'p', 's', 'f', 'cl', 'br', 'i']:
-                new_atom.aromatic = True
-            if not first_atom:
-                first_atom = new_atom
-            if active_atom:
-                bonds.add(Bond(atoms={active_atom, new_atom}, bond_type=bond_type))
-            # todo: process chirality, ie: @/@@, AL/TH, 1/2
-            # todo: process hydrogen count
-            atoms.add(new_atom)
-            active_atom = new_atom
-            bond_type = '-'
 
-    if is_side_chain:
-        side_chain = {'atoms': atoms, 'bonds': bonds, 'first_atom': first_atom, 'first_bond_type': first_bond_type}
-        return side_chain
-    else:
-        bonds = _connect_bonds(bonds)
-        atoms, bonds = _fill_hydrogen(atoms, bonds)
-        molecule.atoms = atoms
-        molecule.bonds = bonds
-        return molecule
+    _fill_hydrogen(bonds, atoms)
+    return bonds, atoms
 
 
-# def parse_to(molecule):
-#     pass
+def parse_to(bonds, atoms):
+    smiles = ''
+    return smiles
 
 
 def _tokenize(smiles_string):
@@ -175,26 +157,29 @@ def _parse_parenthesis(token):
     return isotope, element, h_count, charge, chirality
 
 
-def _connect_bonds(bonds):
-    labels = dict()
-    new_bonds = set()
-    for bond in bonds:
-        new_bonds.add(bond)
-        for label in bond.atoms:
-            if isinstance(label, str):
-                new_bonds.remove(bond)
-                atoms_copy = bond.atoms.copy()
-                atoms_copy.remove(label)
-                atom = atoms_copy.pop()
-                if label not in labels:
-                    labels[label] = atom
+def _fill_hydrogen(bonds, atoms):
+    bond_electron_count = {'-': 1, ':': 1.5, '=': 2, '#': 3, '$': 4}
+    for atom in atoms.copy():
+        try:
+            if atom.h_count >= 0:
+                h_count = atom.h_count
+            else:
+                h_count = 8 - atom['valence electrons']
+                for bond in bonds:
+                    if atom in bond.atoms:
+                        bond_type = bond.bond_type_symbol
+                        h_count -= bond_electron_count[bond_type]
+                if h_count >= 0:
+                    h_count = h_count
                 else:
-                    new_bonds.add(Bond(atoms={atom, labels[label]}))
-    return new_bonds
-
-
-def _fill_hydrogen(atoms, bonds):
-    return atoms, bonds
+                    h_count = 0
+            del atom.h_count
+            for _ in range(h_count):
+                new_h = Atom('H')
+                atoms.add(new_h)
+                bonds.add(Bond(atoms={atom, new_h}))
+        except AttributeError:
+            pass
 
 
 def _find_longest_chain(self):
