@@ -1,0 +1,51 @@
+{
+  "ammonium":
+  {
+    "formula":"[NH4+]",
+    "prefix":"ammonio-",
+    "suffix":"-ammonium"
+  },
+  "carboxylic acid":
+  {
+    "formula":"-C(=O)O",
+    "prefix":"carboxy-",
+    "suffix":"<cpcr>oic acid"
+  },
+  "carbothioic acid": null,
+  "carboselenoic acid": null,
+  "sulfonic acid":
+  {
+    "formula":"-[S](=O)(=O)O",
+    "prefix":"sulfo-",
+    "suffix":"<cpc>-sulfonic acid"
+  },
+  "sulfinic acid":
+  {
+    "formula":"-[S](=O)O",
+    "prefix":"sulfino-",
+    "suffix":"<cpc>-sulfinic acid"
+  },
+  "esther": null,
+  "acyl halide": null,
+  "amide": null,
+  "imide": null,
+  "amidine": null,
+  "nitrile": null,
+  "isocyanide": null,
+  "aldehyde": null,
+  "thioaldehyde": null,
+  "ketone": null,
+  "thione": null,
+  "selone": null,
+  "tellone": null,
+  "alcohol": null,
+  "thiol": null,
+  "selenol": null,
+  "tellurol": null,
+  "peroxol": null,
+  "thioperoxol": null,
+  "dithioperoxol": null,
+  "amine": null,
+  "imine": null,
+  "hydrazine": null
+}
