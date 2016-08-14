@@ -53,9 +53,9 @@ def parse_from(smiles_string, active_atom=None, labels=None):
     return bonds, atoms
 
 
-def parse_to(bonds, atoms):
-    smiles = ''
-    return smiles
+# def parse_to(bonds, atoms):
+#     smiles = ''
+#     return smiles
 
 
 def _tokenize(smiles_string):
@@ -182,23 +182,21 @@ def _fill_hydrogen(bonds, atoms):
 
 
 def find_all_chains(bonds, atoms):
-    def recursive(current_chain, current_bonds):
+    def recursive(current_chain, all_bonds):
         surrounding_atoms = list()
-        remaining_bonds = set()
         current_atom = current_chain[-1]
-        for bond in current_bonds.copy():
+        for bond in all_bonds.copy():
             if current_atom in bond.atoms:
                 atoms_copy = bond.atoms.copy()
                 atoms_copy.remove(current_atom)
                 other_atom = atoms_copy.pop()
-                surrounding_atoms.append(other_atom)
-            else:
-                remaining_bonds.add(bond)
+                if other_atom not in current_chain:
+                    surrounding_atoms.append(other_atom)
         if surrounding_atoms:
             for surrounding_atom in surrounding_atoms:
                 chain_copy = current_chain.copy()
                 chain_copy.append(surrounding_atom)
-                yield from recursive(chain_copy, remaining_bonds)
+                yield from recursive(chain_copy, all_bonds)
         else:
             yield current_chain
 
