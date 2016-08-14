@@ -16,7 +16,6 @@ def parse_from(smiles_string, active_atom=None, labels=None):
 
     bond_type = '-'
     for token in _tokenize(smiles_string):
-        print(token)
         if token[0] == '(':
             new_bonds, new_atoms = parse_from(token[1:-1], active_atom=active_atom, labels=labels)
             atoms.update(new_atoms)
@@ -208,22 +207,22 @@ def find_all_chains(bonds, atoms):
         yield from recursive(chain, bonds)
 
 
-def remove_unused_bonds(bonds, atoms):
-        new_bonds = set()
-        for bond in bonds:
-            do_not_add = False
-            for atom in bond.atoms:
-                if atom not in atoms:
-                    do_not_add = True
-                    break
-            if not do_not_add:
-                new_bonds.add(bond)
-        return new_bonds
+def _remove_unused_bonds(bonds, atoms):
+    new_bonds = set()
+    for bond in bonds:
+        do_not_add = False
+        for atom in bond.atoms:
+            if atom not in atoms:
+                do_not_add = True
+                break
+        if not do_not_add:
+            new_bonds.add(bond)
+    return new_bonds
 
 
 def find_longest_chains(bonds, atoms):
     non_h_atoms = [atom for atom in atoms if atom['symbol'] != 'H']
-    non_h_bonds = remove_unused_bonds(bonds.copy(), non_h_atoms)
+    non_h_bonds = _remove_unused_bonds(bonds.copy(), non_h_atoms)
 
     longest_chains = list()
     longest_chain_len = 0
@@ -236,71 +235,25 @@ def find_longest_chains(bonds, atoms):
     return longest_chains
 
 
-def _get_rings(self):
-    def remove_end_atoms(atoms, bonds):
-        new_atoms = set()
-        nr_removed_atoms = 0
-        for atom in atoms:
-            bond_count = 0
-            for bond in bonds:
-                if atom in bond.atoms:
-                    bond_count += 1
-            if bond_count >= 2:
-                new_atoms.add(atom)
-            else:
-                nr_removed_atoms += 1
-        return new_atoms, nr_removed_atoms
-
-    def recursive(current_chain, bonds):
-        surrounding_atoms = list()
+def _find_all_rings(bonds, atoms):
+    for chain in find_all_chains(bonds, atoms):
+        if len(chain) < 3:
+            continue
+        first_atom = chain[0]
+        last_atom = chain[-1]
         for bond in bonds:
-            current_atom = current_chain[-1]
-            if current_atom in bond.atoms:
-                atoms_copy = bond.atoms.copy()
-                atoms_copy.remove(current_atom)
-                other_atom = atoms_copy.pop()
-                if other_atom not in current_chain:
-                    surrounding_atoms.append(other_atom)
-        if chain[0] in surrounding_atoms:
-            finished_rings = [chain]
-        elif not surrounding_atoms:
-            finished_rings = []
-        else:
-            finished_rings = list()
-            for atom in surrounding_atoms:
-                chain_copy = current_chain.copy()
-                chain_copy.append(atom)
-                finished_rings.extend(recursive(chain_copy, bonds))
-        return finished_rings
+            if first_atom in bond.atoms and last_atom in bond.atoms:
+                yield chain
+                break
 
-    # remove all atoms and bonds that are not part of a ring:
-    cyclic_atoms = [atom for atom in self['atoms'] if atom['symbol'] != 'H']
-    cyclic_bonds = remove_unused_bonds(self['bonds'].copy(), cyclic_atoms)
-    while True:
-        cyclic_atoms, nr_removed = remove_end_atoms(cyclic_atoms, cyclic_bonds)
-        cyclic_bonds = remove_unused_bonds(cyclic_bonds, cyclic_atoms)
-        if nr_removed == 0:
-            break
 
-    # find all possible rings:
-    all_rings = list()
-    for atom in cyclic_atoms:
-        chain = [atom]
-        all_rings.extend(recursive(chain, cyclic_bonds.copy()))
-
-    # filter only unique rings out:
+def find_rings(bonds, atoms):
     unique_ring_sets = list()
     unique_rings = list()
-    for ring in all_rings:
-        ring_set = set()
-        for atom in ring:
-            ring_set.add(atom)
-        new_ring = True
-        for unique_ring_set in unique_ring_sets:
-            if ring_set == unique_ring_set:
-                new_ring = False
-                break
-        if new_ring:
+    for ring in _find_all_rings(bonds, atoms):
+        print(len(ring))
+        ring_set = set(ring)
+        if ring_set not in unique_ring_sets:
             unique_ring_sets.append(ring_set)
             unique_rings.append(ring)
     return unique_rings
