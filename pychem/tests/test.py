@@ -2,7 +2,8 @@
 from pychem.molecules import smiles, gui
 
 
-bonds, atoms = smiles.parse_from('CCc(c1)ccc2[n+]1ccc3c2Nc4c3cccc4')
+bonds, atoms = smiles.parse_from('C[C@@](C)(O1)C[C@@H](O)[C@@]1(O2)[C@@H](C)[C@@H]3CC=C4[C@]3(C2)C(=O)C[C@H]5[C@H]4CC[C@@H](C6)[C@]5(C)Cc(n7)c6nc(C[C@@]89(C))c7C[C@@H]8CC[C@@H]%10[C@@H]9C[C@@H](O)[C@@]%11(C)C%10=C[C@H](O%12)[C@]%11(O)[C@H](C)[C@]%12(O%13)[C@H](O)C[C@@]%13(C)CO')
+print('molecule parsed')
 all_rings = smiles.find_rings(bonds, atoms)
 for chain in all_rings:
     print(len(chain))

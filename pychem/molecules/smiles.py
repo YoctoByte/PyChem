@@ -63,7 +63,7 @@ def _tokenize(smiles_string):
     while index < len(smiles_string):
         if smiles_string[index] == '(':
             right_brack = index
-            while True:
+            while index < len(smiles_string):
                 right_brack = smiles_string.find(')', right_brack) + 1
                 if right_brack == 0:
                     raise ValueError
@@ -80,7 +80,7 @@ def _tokenize(smiles_string):
             index = right_brack
         elif smiles_string[index] == '%':
             label_string = '%'
-            while True:
+            while index + 1 < len(smiles_string):
                 index += 1
                 if smiles_string[index] in '0123456789':
                     label_string += smiles_string[index]
