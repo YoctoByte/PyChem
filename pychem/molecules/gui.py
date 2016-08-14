@@ -1,5 +1,6 @@
 import tkinter as tk
 from math import cos, sin, pi
+from pychem.molecules import smiles
 
 WINDOW_MIN_HEIGHT = 480
 WINDOW_MIN_WIDTH = 800
@@ -26,46 +27,42 @@ class Canvas(tk.Tk):
         self.canvas = tk.Canvas(self, width=900, height=200)
         self.canvas.pack()
 
-    def draw_molecule(self, molecule):
-        class GUIAtom():
+    def draw_molecule(self, bonds, atoms):
+        class GUIAtom:
             def __init__(self, atom, pos=(0, 0)):
                 self.symbol = atom['symbol']
                 self.atom_reference = atom
                 self.position = pos
 
-        def draw_atoms_and_bonds(gatoms, bonds):
+        def draw_bonds_and_atoms(gbonds, gatoms):
             for gatom in gatoms:
                 self.canvas.create_text(gatom.position, text=gatom.symbol)
-            for bond in bonds:
-                if bond['type'] == '':
-                    self.canvas.create_line(bond['line'])
-                elif bond['type'] == '=':
-                    pass
-                elif bond['type'] == '#':
-                    pass
-                elif bond['type'] == '$':
-                    pass
+            for gbond in gbonds:
+                if gbond['type'] == '-':
+                    self.canvas.create_line(gbond['line'])
 
-        atoms = list()  # list of dicts
-        bonds = list()  # list of dicts
+        gatoms = list()
+        gbonds = list()
         pos = (25, 87)
         angle = 30
-        longest_chain = molecule['longest chain'][0]
-        previous_atom = None
+        longest_chain = smiles.find_longest_chains(bonds, atoms)[0]
         for atom in longest_chain:
             x, y = pos
             x += BOND_LENGTH * cos(angle/180*pi)
-            y += (BOND_LENGTH * sin(angle/180*pi))
+            y += BOND_LENGTH * sin(angle/180*pi)
             pos = (x, y)
             if angle > 0:
                 angle -= 60
             else:
                 angle += 60
             gatom = GUIAtom(atom, pos)
-            atoms.append(gatom)
-            if previous_atom:
-                bonds.append({'line': (previous_atom.position[0], previous_atom.position[1], x, y), 'type': ''})
-            previous_atom = gatom
-        draw_atoms_and_bonds(atoms, bonds)
+            gatoms.append(gatom)
+            if gatoms:
+                gbonds.append({'line': (gatoms[-1].position[0], gatoms[-1].position[1], x, y), 'type': '-'})
+        draw_bonds_and_atoms(gbonds, gatoms)
         self.mainloop()
         self.terminate = True
+
+
+class Canvas3D:
+    pass

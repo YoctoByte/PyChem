@@ -182,25 +182,12 @@ def _fill_hydrogen(bonds, atoms):
             pass
 
 
-def _find_longest_chain(self):
-    def remove_unused_bonds(atoms, bonds):
-        new_bonds = set()
-        for bond in bonds:
-            do_not_add = False
-            for atom in bond.atoms:
-                if atom not in atoms:
-                    do_not_add = True
-                    break
-            if not do_not_add:
-                new_bonds.add(bond)
-        return new_bonds
-
-    def recursive(current_chain, bonds):
-        print('current chain: ' + str(current_chain))
+def find_all_chains(bonds, atoms):
+    def recursive(current_chain, current_bonds):
         surrounding_atoms = list()
         remaining_bonds = set()
-        for bond in bonds.copy():
-            current_atom = current_chain[-1]
+        current_atom = current_chain[-1]
+        for bond in current_bonds.copy():
             if current_atom in bond.atoms:
                 atoms_copy = bond.atoms.copy()
                 atoms_copy.remove(current_atom)
@@ -209,52 +196,19 @@ def _find_longest_chain(self):
             else:
                 remaining_bonds.add(bond)
         if surrounding_atoms:
-            finished_chains = list()
-            for atom in surrounding_atoms:
+            for surrounding_atom in surrounding_atoms:
                 chain_copy = current_chain.copy()
-                chain_copy.append(atom)
-                finished_chains.extend(recursive(chain_copy, remaining_bonds))
+                chain_copy.append(surrounding_atom)
+                yield from recursive(chain_copy, remaining_bonds)
         else:
-            finished_chains = [current_chain]
-        return finished_chains
+            yield current_chain
 
-    non_h_atoms = [atom for atom in self['atoms'] if atom['symbol'] != 'H']
-    non_h_bonds = remove_unused_bonds(non_h_atoms, self['bonds'].copy())
-
-    all_chains = list()
-    for atom in non_h_atoms:
+    for atom in atoms:
         chain = [atom]
-        result = recursive(chain, non_h_bonds.copy())
-        all_chains.extend(result)
-        print(result)
-
-    longest_chains = list()
-    longest_chain_len = 0
-    longest_carbon_chains = list()
-    longest_carbon_chain_len = 0
-    for chain in all_chains:
-        if len(chain) == longest_chain_len:
-            longest_chains.append(chain)
-        if len(chain) > longest_chain_len:
-            longest_chains = [chain]
-            longest_chain_len = len(chain)
-        if chain[0]['symbol'] == 'C' and chain[-1]['symbol'] == 'C':
-            if len(chain) == longest_carbon_chain_len:
-                longest_carbon_chains.append(chain)
-            if len(chain) > longest_carbon_chain_len:
-                longest_carbon_chains = [chain]
-                longest_carbon_chain_len = len(chain)
-
-    # todo: find best longest chain
-
-    if longest_carbon_chains:
-        return longest_carbon_chains
-    else:
-        return longest_chains
+        yield from recursive(chain, bonds)
 
 
-def _get_rings(self):
-    def remove_unused_bonds(atoms, bonds):
+def remove_unused_bonds(bonds, atoms):
         new_bonds = set()
         for bond in bonds:
             do_not_add = False
@@ -266,6 +220,23 @@ def _get_rings(self):
                 new_bonds.add(bond)
         return new_bonds
 
+
+def find_longest_chains(bonds, atoms):
+    non_h_atoms = [atom for atom in atoms if atom['symbol'] != 'H']
+    non_h_bonds = remove_unused_bonds(bonds.copy(), non_h_atoms)
+
+    longest_chains = list()
+    longest_chain_len = 0
+    for chain in find_all_chains(non_h_bonds, non_h_atoms):
+        if len(chain) == longest_chain_len:
+            longest_chains.append(chain)
+        if len(chain) > longest_chain_len:
+            longest_chains = [chain]
+            longest_chain_len = len(chain)
+    return longest_chains
+
+
+def _get_rings(self):
     def remove_end_atoms(atoms, bonds):
         new_atoms = set()
         nr_removed_atoms = 0
@@ -304,10 +275,10 @@ def _get_rings(self):
 
     # remove all atoms and bonds that are not part of a ring:
     cyclic_atoms = [atom for atom in self['atoms'] if atom['symbol'] != 'H']
-    cyclic_bonds = remove_unused_bonds(cyclic_atoms, self['bonds'].copy())
+    cyclic_bonds = remove_unused_bonds(self['bonds'].copy(), cyclic_atoms)
     while True:
         cyclic_atoms, nr_removed = remove_end_atoms(cyclic_atoms, cyclic_bonds)
-        cyclic_bonds = remove_unused_bonds(cyclic_atoms, cyclic_bonds)
+        cyclic_bonds = remove_unused_bonds(cyclic_bonds, cyclic_atoms)
         if nr_removed == 0:
             break
 
