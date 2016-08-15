@@ -8,16 +8,16 @@ with open(DATA_DIR + 'carbon_prefixes.json') as jf:
     CARBON_PREFIXES = json.load(jf)
 
 
-def parse_from(molecule, name_string):
+def parse_from(name_string):
     pass
 
 
-def parse_to(molecule):
-    parent_chain = _find_parent_chain(molecule)
-    side_chains = _find_side_chains(molecule, parent_chain)
+def parse_to(bonds, atoms):
+    parent_chain = _find_parent_chain(bonds, atoms)
+    side_chains = _find_side_chains(bonds, atoms, parent_chain)
 
 
-def _find_parent_chain(molecule):
+def _find_parent_chain(bonds, atoms):
     # find all longest carbon chains
     # 1. It should have the maximum number of substituents of the suffix functional group. By suffix, it
     # is meant that the parent functional group should have a suffix, unlike halogen substituents. If
@@ -28,7 +28,7 @@ def _find_parent_chain(molecule):
     pass
 
 
-def _find_side_chains(molecule, parent_chain):
+def _find_side_chains(bonds, atoms, parent_chain):
     pass
 
 

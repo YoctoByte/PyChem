@@ -105,3 +105,16 @@ def find_rings(bonds, atoms, max_length=10):
             unique_ring_sets.append(ring_set)
             unique_rings.append(ring)
     return unique_rings
+
+
+def check_molecule(bonds, atoms):
+    # todo: verify whether a molecule is valid or not; octet rule and stuff...
+    pass
+
+
+def _bonds_to_atoms(bonds):
+    new_atoms = set()
+    for bond in bonds:
+        for atom in bond.atoms:
+            new_atoms.add(atom)
+    return new_atoms

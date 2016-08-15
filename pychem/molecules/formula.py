@@ -1,5 +1,19 @@
 
 
+def from_formula(formula_string):
+    pass
+
+
+def to_formula(bonds, atoms):
+    # CH3CH2COOH
+    # CH3-CH2-COOH
+    pass
+
+
+def emperical(atoms):
+    pass
+
+
 def gcd(iterable):
     def _gcd(x, y):
         """Euclidian algorithm"""

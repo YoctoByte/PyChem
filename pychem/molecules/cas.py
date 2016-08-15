@@ -1,7 +1,7 @@
 # todo:
-def parse_from(molecule, cas_number):
+def parse_from(cas_number):
     pass
 
 # todo:
-def parse_to(molecule):
+def parse_to(bonds, atoms):
     pass

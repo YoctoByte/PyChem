@@ -1,5 +1,5 @@
 # from pychem.molecules.atom import Atom
-from pychem.molecules import smiles, cas, gui, iupac
+from pychem.molecules import smiles, cas, gui, iupac, formula, geometrics
 
 
 # todo: calculate resonance structures
@@ -29,38 +29,24 @@ class Molecule:
         if molecule_data is not None:
             if data_type:
                 if data_type.lower() == 'formula':
-                    self._from_formula(molecule_data)
+                    self.bonds, self.atoms = formula.from_formula(molecule_data)
                     self.formula = molecule_data
                 elif data_type.lower() == 'smiles':
-                    smiles.parse_from(self, molecule_data)
+                    self.bonds, self.atoms = smiles.parse_from(molecule_data)
                     self.smiles = molecule_data
                 elif data_type.lower() == 'cas':
-                    cas.parse_from(self, molecule_data)
+                    self.bonds, self.atoms = cas.parse_from(molecule_data)
                     self.cas_number = molecule_data
                 elif data_type.lower() == 'iupac':
-                    iupac.parse_from(self, molecule_data)
+                    self.bonds, self.atoms = iupac.parse_from(molecule_data)
                     self.iupac_name = molecule_data
             else:
                 self._from_data(molecule_data)
-            self.check_molecule()
-
-    # todo:
-    def __str__(self):
-        pass
+            geometrics.check_molecule(self.bonds, self.atoms)
 
     def draw_2d(self):
         canvas = gui.Canvas()
-        canvas.draw_molecule(self)
-
-    def check_molecule(self):
-        # todo: verify whether a molecule is valid or not; octet rule and stuff...
-        pass
-
-    def _from_formula(self, formula_string):
-        pass
-
-    def _to_formula(self):
-        pass
+        canvas.draw_molecule(self.bonds, self.atoms)
 
     # todo:
     def _from_data(self, data):
