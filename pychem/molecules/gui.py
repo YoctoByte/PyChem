@@ -1,6 +1,6 @@
 import tkinter as tk
 from math import cos, sin, pi
-from pychem.molecules import smiles
+from pychem.molecules import geometrics
 
 WINDOW_MIN_HEIGHT = 480
 WINDOW_MIN_WIDTH = 800
@@ -45,7 +45,7 @@ class Canvas(tk.Tk):
         gbonds = list()
         pos = (25, 87)
         angle = 30
-        longest_chain = smiles.find_longest_chains(bonds, atoms)[0]
+        longest_chain = geometrics.find_longest_chains(bonds, atoms)[0]
         for atom in longest_chain:
             x, y = pos
             x += BOND_LENGTH * cos(angle/180*pi)

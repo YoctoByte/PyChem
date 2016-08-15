@@ -1,5 +1,5 @@
-# from pychem.molecules.atom import Atom
-from pychem.molecules import smiles, cas, gui, iupac, formula, geometrics
+from pychem.molecules.parsers import smiles, cas, iupac, formula
+from pychem.molecules import geometrics, gui
 
 
 # todo: calculate resonance structures
