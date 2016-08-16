@@ -1,8 +1,12 @@
+from pychem.molecules import geometrics
+
 import json
 import os
 
+
 parent_dir = os.path.split(os.path.dirname(__file__))[0]
-DATA_DIR = parent_dir + '/data/iupac/'
+parent_parent_dir = os.path.split(parent_dir)[0]
+DATA_DIR = parent_parent_dir + '/data/iupac/'
 
 with open(DATA_DIR + 'carbon_prefixes.json') as jf:
     CARBON_PREFIXES = json.load(jf)
@@ -18,14 +22,28 @@ def parse_to(bonds, atoms):
 
 
 def _find_parent_chain(bonds, atoms):
-    # find all longest carbon chains
-    # 1. It should have the maximum number of substituents of the suffix functional group. By suffix, it
-    # is meant that the parent functional group should have a suffix, unlike halogen substituents. If
-    # more than one functional group is present, the one with highest precedence should be used.
-    # 2. It should have the maximum number of multiple bonds
-    # 3. It should have the maximum number of single bonds.
-    # 4. It should have the maximum length.
-    pass
+
+    # todo: if cyclic...
+
+    carbon_atoms = set()
+    for atom in atoms:
+        if atom['symbol'] == 'C':
+            carbon_atoms.add(atom)
+    carbon_bonds = geometrics.list_active_bonds(bonds, carbon_atoms)
+
+    parent_chain_candidates = list()
+    best_substituent_count = 0
+    for carbon_chain in geometrics.list_longest_chains(carbon_bonds, carbon_atoms):
+        substituent_count = 0
+        for bond in bonds:
+            for atom in bond.atoms:
+                if atom['symbol'] != 'H' and atom in carbon_chain:
+                    substituent_count += 1
+        if substituent_count == best_substituent_count:
+            pass
+        else:
+            parent_chain_candidates = [carbon_chain]
+            best_substituent_count = substituent_count
 
 
 def _find_side_chains(bonds, atoms, parent_chain):
