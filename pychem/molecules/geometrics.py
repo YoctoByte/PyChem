@@ -1,5 +1,54 @@
 
 
+def _yield_surrounding_atoms(bonds, atom):
+    for bond in bonds:
+        if atom in bond.atoms:
+            atoms_copy = bond.atoms.copy()
+            atoms_copy.remove(atom)
+            while atoms_copy:
+                other_atom = atoms_copy.pop()
+                yield other_atom
+
+
+def _list_surrounding_atoms(bonds, atom):
+    return list(_yield_surrounding_atoms(bonds, atom))
+
+
+def _simplify(bonds, atoms):
+    """
+    bug: does not work for full cyclic molecules
+    :param bonds:
+    :param atoms:
+    :return:
+    """
+    inter_atoms = set()
+    joint_atoms = set()
+    bond_count = dict()
+    for atom in atoms.copy():
+        nr_of_bonds = len(_list_surrounding_atoms(bonds, atom))
+        bond_count[atom] = nr_of_bonds
+        if nr_of_bonds != 2:
+            joint_atoms.add(atom)
+        else:
+            inter_atoms.add(atom)
+
+    simplified_bonds = set()
+    for atom in joint_atoms:
+        for surrounding_atom in bond_count[atom]:
+            chain = [atom, surrounding_atom]
+            previous_atom = atom
+            current_atom = surrounding_atom
+            while bond_count[surrounding_atom] == 2:
+                surrounding_atoms = _list_surrounding_atoms(bonds, current_atom)
+                surrounding_atoms.remove(previous_atom)
+                previous_atom = current_atom
+                current_atom = surrounding_atoms.pop()
+                chain.append(current_atom)
+            simplified_bonds.add(chain)
+
+    return simplified_bonds, joint_atoms
+
+
 def yield_all_chains(bonds, atoms, max_length=100):
     def recursive(current_chain, all_bonds):
         yield current_chain
@@ -40,6 +89,23 @@ def list_ending_atoms(bonds, atoms):
 
 
 def list_longest_chains(bonds, atoms, exclude_hydrogen=True, max_length=100):
+    length_longest_chain = 0
+
+    def recursive(current_chain, all_bonds):
+        yield current_chain
+        if len(current_chain) >= max_length:
+            return
+        current_atom = current_chain[-1]
+        for bond in all_bonds.copy():
+            if current_atom in bond.atoms:
+                atoms_copy = bond.atoms.copy()
+                atoms_copy.remove(current_atom)
+                other_atom = atoms_copy.pop()
+                if other_atom not in current_chain:
+                    chain_copy = current_chain.copy()
+                    chain_copy.append(other_atom)
+                    yield from recursive(chain_copy, all_bonds)
+
     if exclude_hydrogen:
         non_h_atoms = [atom for atom in atoms if atom['symbol'] != 'H']
         remaining_bonds = list_active_bonds(bonds.copy(), non_h_atoms)
@@ -51,12 +117,14 @@ def list_longest_chains(bonds, atoms, exclude_hydrogen=True, max_length=100):
     # find the longest chains, starting from the ending atoms:
     longest_chains = list()
     length_longest_chain = 0
-    for chain in yield_all_chains(remaining_bonds, ending_atoms, max_length=max_length):
-        if len(chain) == length_longest_chain:
-            longest_chains.append(chain)
-        elif len(chain) > length_longest_chain:
-            longest_chains = [chain]
-            length_longest_chain = len(chain)
+    for atom in ending_atoms:
+        chain = [atom]
+        for chain in recursive(chain, remaining_bonds):
+            if len(chain) == length_longest_chain:
+                longest_chains.append(chain)
+            elif len(chain) > length_longest_chain:
+                longest_chains = [chain]
+                length_longest_chain = len(chain)
     return longest_chains
 
 
