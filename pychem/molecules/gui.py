@@ -45,7 +45,7 @@ class Canvas(tk.Tk):
         gbonds = list()
         pos = (25, 87)
         angle = 30
-        longest_chain = geometrics.find_longest_chains(bonds, atoms)[0]
+        longest_chain = geometrics.list_longest_chains(bonds, atoms)[0]
         for atom in longest_chain:
             x, y = pos
             x += BOND_LENGTH * cos(angle/180*pi)

@@ -1,11 +1,9 @@
 from pychem.molecules.parsers import smiles, cas, iupac, formula
-from pychem.molecules import geometrics, gui
+from pychem.molecules import gui
 
 
 # todo: calculate resonance structures
 # todo: predict stability of molecule
-# todo: create molecule from IUPAC naming
-# todo: lookup CAS number in some database
 
 
 class Molecule:
@@ -13,10 +11,6 @@ class Molecule:
         """
         :param molecule_data: The molecule data (see examples)
         :param data_type: The molecule data type (see examples)
-        examples for formula: 'Al2(SO4)3', 'CO2'
-        examples for smiles: [Al+3].[O-]S(=O)(=O)[O-]O-C-O
-        examples for name (iupac conventions): 'aluminium sulfate', 'carbon dioxide'
-        examples for CAS: '10043-01-3', '124-38-9'
         """
         self.atoms = set()
         self.bonds = set()
@@ -41,13 +35,41 @@ class Molecule:
                     self.bonds, self.atoms = iupac.parse_from(molecule_data)
                     self.iupac_name = molecule_data
             else:
-                self._from_data(molecule_data)
-            geometrics.check_molecule(self.bonds, self.atoms)
+                # parse
+                pass
+
+    def __iter__(self):
+        for atom in self.atoms:
+            yield atom
+
+    def add_atom(self, atom):
+        self.atoms.add(atom)
+
+    def add_bond(self, bond):
+        self.bonds.add(bond)
+        for atom in bond.atoms:
+            self.atoms.add(atom)
+            for other_atom in bond.atoms:
+                if other_atom != atom:
+                    atom.surrounding_atoms.add(other_atom)
+
+    def remove_atom(self, atom):
+        pass
+
+    def remove_bond(self, bond):
+        pass
+
+    def copy(self):
+        molecule_copy = Molecule()
+        for var in vars(self):
+            print(var)
+
+    def deepcopy(self):
+        pass
 
     def draw_2d(self):
         canvas = gui.Canvas()
         canvas.draw_molecule(self.bonds, self.atoms)
 
-    # todo:
-    def _from_data(self, data):
-        pass
+molecule = Molecule()
+molecule.copy()

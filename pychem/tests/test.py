@@ -26,8 +26,8 @@ def test_find_rings():
 
 
 def test_find_longest_chains():
-    bonds, atoms = smiles.parse_from(pyrazine_rex)
-    for chain in geometrics.list_longest_chains(bonds, atoms):
+    atoms = smiles.parse_from(pyrazine_rex)
+    for chain in geometrics.list_longest_chains(atoms):
         print(len(chain))
         for atom in chain:
             print(atom['name'])

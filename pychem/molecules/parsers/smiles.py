@@ -1,5 +1,6 @@
 from pychem.molecules.atom import Atom
 from pychem.molecules.bond import Bond
+from pychem.molecules import geometrics
 
 
 def parse_from(smiles_string, active_atom=None, labels=None):
@@ -17,9 +18,8 @@ def parse_from(smiles_string, active_atom=None, labels=None):
     bond_type = '-'
     for token in _tokenize(smiles_string):
         if token[0] == '(':
-            new_bonds, new_atoms = parse_from(token[1:-1], active_atom=active_atom, labels=labels)
+            new_atoms = parse_from(token[1:-1], active_atom=active_atom, labels=labels)
             atoms.update(new_atoms)
-            bonds.update(new_bonds)
         elif token[0] == '[':
             # todo: process chirality, ie: @/@@, AL/TH, 1/2
             # TH: Tetrahedral, AL: Allenal, SP: Square Planar, TB: Trigonal Bipyramidal, OH: Octahedral
@@ -50,7 +50,8 @@ def parse_from(smiles_string, active_atom=None, labels=None):
             bond_type = token
 
     _fill_hydrogen(bonds, atoms)
-    return bonds, atoms
+    geometrics.add_bonds_to_atoms(bonds)
+    return atoms
 
 
 # def parse_to(bonds, atoms):

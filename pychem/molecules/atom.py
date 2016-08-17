@@ -20,6 +20,8 @@ class Atom:
         self.aromatic = False
         self.isotope = isotope
         self.aromatic = aromatic
+        self.bonds = set()
+        self.surrounding_atoms = set()
 
     def __getitem__(self, item):
         if item == 'valence electrons':
