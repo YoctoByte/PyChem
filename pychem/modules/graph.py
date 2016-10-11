@@ -184,7 +184,8 @@ def dijkstra_get_path(graph, source, sink, _allow_direct_edge=True):
             return []
         node = predecessors[node]
         path.append(node)
-    return list(reversed(path))
+    path.reverse()
+    return path
 
 
 ############################################################
@@ -219,8 +220,17 @@ def bellman_ford(graph, source):
     return distance, predecessor
 
 
-def bellman_ford_get_path(graph, source, sink):
-    pass
+def bellman_ford_get_path(graph, source, sink, _allow_direct_edge=True):
+    _, predecessors = dijkstra(graph, source, sink=sink, _allow_direct_edge=_allow_direct_edge)
+    node = sink
+    path = [node]
+    while node != source:
+        if node not in predecessors:
+            return []
+        node = predecessors[node]
+        path.append(node)
+    path.reverse()
+    return path
 
 
 ############################################################
