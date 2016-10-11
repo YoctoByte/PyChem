@@ -138,6 +138,16 @@ class Graph:
 
 
 def dijkstra(graph, source, sink=None, _allow_direct_edge=True):
+    """
+    Dijkstra's algorithm for finding the shortest paths in a weighted graph starting with node 'source'.
+    If the graph contains negative edges, it is better to use the Bellman-Ford algorithm.
+    Worst case performance: O(V*E)
+
+    If a node 'sink' is specified, the algorithm terminates if the weight of the shortest path to that
+    node is known. This is useful if you only need to know the path to that node.
+
+    '_allow_direct_edge' is a parameter useful for the algorithm that finds non-reducible cycles.
+    """
     unvisited_nodes = set()
     distance = dict()
     predecessor = dict()
@@ -159,6 +169,7 @@ def dijkstra(graph, source, sink=None, _allow_direct_edge=True):
             break
         unvisited_nodes.remove(current_node)
 
+        # if the sink node is picked from unvisited_nodes it is certain its lowest weight path is known
         if current_node == sink:
             break
 
@@ -175,25 +186,23 @@ def dijkstra(graph, source, sink=None, _allow_direct_edge=True):
     return distance, predecessor
 
 
-def dijkstra_get_path(graph, source, sink, _allow_direct_edge=True):
-    _, predecessors = dijkstra(graph, source, sink=sink, _allow_direct_edge=_allow_direct_edge)
-    node = sink
-    path = [node]
-    while node != source:
-        if node not in predecessors:
-            return []
-        node = predecessors[node]
-        path.append(node)
-    path.reverse()
-    return path
-
-
 ############################################################
 #                 Bellman-Ford algorithm                   #
 ############################################################
 
 
 def bellman_ford(graph, source):
+    """
+    The Bellman-Ford algorithm for finding the shortest paths in a weighted graph starting with node 'source'.
+    This algorithm can be used with graphs with negative weighted edges, as long as the graph does not contain
+    negative cycles. If negative cycles are encountered the algorithm raises a ValueError.
+    Worst case performance: O(V*E)
+
+    If a node 'sink' is specified, the algorithm terminates if the weight of the shortest path to that
+    node is known. This is useful if you only need to know the path to that node.
+
+    '_allow_direct_edge' is a parameter useful for the algorithm that finds non-reducible cycles.
+    """
     distance = dict()
     predecessor = dict()
     edges = list()
@@ -220,8 +229,51 @@ def bellman_ford(graph, source):
     return distance, predecessor
 
 
-def bellman_ford_get_path(graph, source, sink, _allow_direct_edge=True):
-    _, predecessors = dijkstra(graph, source, sink=sink, _allow_direct_edge=_allow_direct_edge)
+############################################################
+#                          BFS                             #
+############################################################
+
+
+def bfs_shortest_paths(graph, source, sink=None, _allow_direct_edge=True):
+    visited_nodes = {source}
+    predecessor = dict()
+    distance = {source: 0}
+    bfs_queue = Queue()
+    bfs_queue.put(source)
+    while not bfs_queue.empty():
+        current_node = bfs_queue.get()
+        for adj_node in graph.adj_nodes(current_node):
+            if adj_node == sink and current_node == source and not _allow_direct_edge:
+                continue
+            if adj_node not in visited_nodes:
+                predecessor[adj_node] = current_node
+                distance[adj_node] = distance[current_node] + 1
+                visited_nodes.add(adj_node)
+                bfs_queue.put(adj_node)
+            if adj_node == sink:
+                if _allow_direct_edge or current_node != source:
+                    break
+    return distance, predecessor
+
+
+############################################################
+#            generalizing path find algorithm              #
+############################################################
+
+
+def find_shortest_path(graph, source, sink, alg='bellmanford', _allow_direct_edge=True):
+    """
+    'alg' is the parameter that determines what path-finding algorithm is used. Valid options are; 'dijkstra',
+    'bellmanford', and 'bfs'. Note: bfs does not take edge weight into account but finds the path with the
+    lowest amount of edges.
+
+    '_allow_direct_edge' determines if an edge from node_from to node_to also counts as valid path. This option
+    is essential for finding non reducible cycles.
+
+    returns a list of nodes starting with node_from, ending with node_to.
+    """
+    algorithm = _choose_path_find_algorithm(alg)
+    _, predecessors = algorithm(graph, source, sink=sink, _allow_direct_edge=_allow_direct_edge)
     node = sink
     path = [node]
     while node != source:
@@ -233,62 +285,14 @@ def bellman_ford_get_path(graph, source, sink, _allow_direct_edge=True):
     return path
 
 
-############################################################
-#                          BFS                             #
-############################################################
-
-
-def bfs_shortest_paths(graph, source, sink=None, _allow_direct_edge=True):
-    pass
-
-
-def bfs_get_path(graph, source, sink, _allow_direct_edge=True):
-    """
-    O(V) time efficiency
-    :param graph:
-    :param source:
-    :param sink:
-    :param _allow_direct_edge: This parameter determines if an edge from node_from to node_to also counts as valid path.
-    :return: return a list of nodes starting with node_from, ending with node_to.
-    """
-    visited_nodes = {source}
-    predecessor = dict()
-    bfs_queue = Queue()
-    bfs_queue.put(source)
-    while not bfs_queue.empty():
-        current_node = bfs_queue.get()
-        for adj_node in graph.adj_nodes(current_node):
-            if adj_node == sink and current_node == source and not _allow_direct_edge:
-                continue
-            if adj_node not in visited_nodes:
-                predecessor[adj_node] = current_node
-                visited_nodes.add(adj_node)
-                bfs_queue.put(adj_node)
-            if adj_node == sink:
-                if _allow_direct_edge or current_node != source:
-                    path = list()
-                    path_node = sink
-                    while path_node != source:
-                        path.append(path_node)
-                        path_node = predecessor[path_node]
-                    path.append(source)
-                    return list(reversed(path))
-    return []
-
-
-############################################################
-#            generalizing path find algorithm              #
-############################################################
-
-
 def _choose_path_find_algorithm(string):
-    string = string.lower().replace('-', '').replace('_', '').replace(' ', '')
+    string = string.lower()
     if string in ['dijkstra']:
-        algorithm = dijkstra_get_path
+        algorithm = dijkstra
     elif string in ['bellmanford', 'bellman', 'ford']:
-        algorithm = bellman_ford_get_path
+        algorithm = bellman_ford
     elif string in ['bfs', 'breadthfirstsearch']:
-        algorithm = bfs_get_path
+        algorithm = bfs_shortest_paths
     else:
         raise ValueError('"' + string + '" is not recognized as a path finding algorithm. Valid options are:\n'
                                         ' - dijkstra\n'
