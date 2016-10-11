@@ -33,6 +33,11 @@ def semi_cyclic_graph():
 
 
 class TestGraphAlgorithms(unittest.TestCase):
+    def test_graph(self):
+        g = graph.Graph()
+        self.assertEqual(g.get_edges(), [])
+        self.assertEqual(g.get_nodes(), [])
+
     def test_dijkstra(self):
         distances, predecessors = graph.dijkstra(dijkstra_graph(), '1')
         self.assertEqual(distances, {'1': 0, '2': 7, '3': 9, '4': 20, '5': 20, '6': 11})

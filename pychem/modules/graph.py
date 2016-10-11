@@ -2,15 +2,11 @@ from queue import Queue
 
 
 class Graph:
-    def __init__(self, nodes=None, edges=None, edge_ids=None, directed=True, weighted=False):
+    def __init__(self, nodes=None, edges=None, directed=True, weighted=False):
         self.directed = directed
         self.weighted = weighted
         self._nodes = dict()
         self.edges = set()
-
-        # todo
-        if edge_ids:
-            pass
 
         self.add_nodes(nodes)
         self.add_edges(edges)
@@ -40,6 +36,10 @@ class Graph:
 
     def get_edges(self):
         return list(self.yield_edges())
+
+    def yield_nodes(self):
+        for node in self:
+            yield node
 
     def get_nodes(self):
         return list(self)
@@ -94,22 +94,41 @@ class Graph:
                 edge_weight = 1
             self.add_edge(node_from, node_to, edge_weight)
 
-    # todo: directed, weighted
-    def copy(self, directed=None, weighted=None):
-        new_graph = Graph()
+    def copy(self, directed=None, weighted=None, nodes=None):
+        if directed is None:
+            directed = self.directed
+        if weighted is None:
+            weighted = self.directed
+        new_graph = Graph(directed=directed, weighted=weighted)
+        for node in self:
+            if nodes and node in nodes:
+                new_graph.add_node(node)
+        for node_from, node_to, edge_weight in self.edges:
+            if nodes and node_from in nodes and node_to in nodes:
+                new_graph.add_edge(node_from, node_to, edge_weight)
+        return new_graph
+
+    def deepcopy(self, directed=None, weighted=None, nodes=None):
+        if directed is None:
+            directed = self.directed
+        if weighted is None:
+            weighted = self.directed
+        new_graph = Graph(directed=directed, weighted=weighted)
         new_node = dict()
         for node in self:
-            try:
-                new_node[node] = node.copy()
-            except AttributeError:
-                new_node[node] = node
-            new_graph.add_node(new_node[node])
+            if nodes and node in nodes:
+                try:
+                    new_node[node] = node.copy()
+                except AttributeError:
+                    new_node[node] = node
+                new_graph.add_node(new_node[node])
         for node_from, node_to, edge_weight in self.edges:
-            try:
-                edge_weight = edge_weight.copy()
-            except AttributeError:
-                pass
-            new_graph.add_edge(new_node[node_from], new_node[node_to], edge_weight)
+            if nodes and node_from in nodes and node_to in nodes:
+                try:
+                    edge_weight = edge_weight.copy()
+                except AttributeError:
+                    pass
+                new_graph.add_edge(new_node[node_from], new_node[node_to], edge_weight)
         return new_graph
 
 
@@ -407,61 +426,70 @@ def _tarjan_strongconnect(graph, node, i, stack, onstack, index, lowlink):
 ############################################################
 
 
-def is_reachable(graph, node_from, node_to):
+def get_path_bfs(graph, node_from, node_to, allow_direct_edge=True):
     """
-    O(V)
+    O(V) if path is not found.
     :param graph:
     :param node_from:
     :param node_to:
-    :return: True if there is a path from node_from to node_to. Otherwise return False
+    :param allow_direct_edge: This parameter determines if an edge from node_from to node_to also counts as valid path.
+    :return: return a list of nodes starting with node_from, ending with node_to.
     """
     visited_nodes = {node_from}
+    predecessor = dict()
     bfs_queue = Queue()
     bfs_queue.put(node_from)
-    while bfs_queue:
+    while not bfs_queue.empty():
         current_node = bfs_queue.get()
         for adj_node in graph.adj_nodes(current_node):
-            if adj_node == node_to:
-                return True
+            if adj_node == node_to and current_node == node_from and not allow_direct_edge:
+                continue
             if adj_node not in visited_nodes:
+                predecessor[adj_node] = current_node
                 visited_nodes.add(adj_node)
                 bfs_queue.put(adj_node)
-    return False
+            if adj_node == node_to:
+                if allow_direct_edge or current_node != node_from:
+                    path = list()
+                    path_node = node_to
+                    while path_node != node_from:
+                        path.append(path_node)
+                        path_node = predecessor[path_node]
+                    path.append(node_from)
+                    return reversed(path)
+    return list()
 
 
-# todo: not returning the right nodes
 def get_cyclic_nodes(graph):
     cyclic_nodes = set()
     for node in graph:
-        mark = dict()
-        border = set()
+        if node in cyclic_nodes:
+            continue
         for adj_node in graph.adj_nodes(node):
-            mark[adj_node] = adj_node
-            border.add(adj_node)
-
-        is_cyclic = False
-        while border:
-            border_node = border.pop()
-            for adj_node in graph.adj_nodes(border_node):
-                if adj_node in mark:
-                    if not mark[adj_node] == mark[border_node]:
-                        is_cyclic = True
-                        break
-                else:
-                    mark[adj_node] = mark[border_node]
-                    if adj_node != node:
-                        border.add(adj_node)
-            if is_cyclic:
-                break
-        if is_cyclic:
-            cyclic_nodes.add(node)
+            path = get_path_bfs(graph, adj_node, node, allow_direct_edge=graph.directed)
+            for path_node in path:
+                cyclic_nodes.add(path_node)
     return cyclic_nodes
 
 
 def non_reducible_cycles(graph):
-    cyclic_nodes = get_cyclic_nodes(graph)
+    if graph.weighted:
+        pass
+    else:
+        return _non_reducible_cycles_unweighted(graph)
+
+
+def _non_reducible_cycles_unweighted(graph):
+    pass
 
 
 ############################################################
 #                                                          #
 ############################################################
+
+
+if __name__ == '__main__':
+    e = [('a', 'b'), ('b', 'c'), ('c', 'a'), ('c', 'd'), ('d', 'e'), ('e', 'f'), ('f', 'g'), ('g', 'h'), ('h', 'f'),
+         ('e', 'i')]
+    g = Graph(edges=e, directed=False, weighted=False)
+    print(get_cyclic_nodes(g))
