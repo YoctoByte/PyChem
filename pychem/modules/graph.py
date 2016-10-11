@@ -137,7 +137,7 @@ class Graph:
 ############################################################
 
 
-def dijkstra(graph, source, sink=None, force_unweighted=False):
+def dijkstra(graph, source, sink=None, _allow_direct_edge=True):
     unvisited_nodes = set()
     distance = dict()
     predecessor = dict()
@@ -155,13 +155,17 @@ def dijkstra(graph, source, sink=None, force_unweighted=False):
                 lowest_distance = distance[node]
                 closest_node = node
         current_node = closest_node
+        if current_node is None:
+            break
         unvisited_nodes.remove(current_node)
 
         if current_node == sink:
             break
 
         for adj_node, edge_weight in graph[current_node]:
-            if not graph.weighted or force_unweighted:
+            if current_node == source and adj_node == sink and not _allow_direct_edge:
+                continue
+            if not graph.weighted:
                 edge_weight = 1
             new_dist = distance[current_node] + edge_weight
             if new_dist < distance[adj_node]:
@@ -171,12 +175,24 @@ def dijkstra(graph, source, sink=None, force_unweighted=False):
     return distance, predecessor
 
 
+def dijkstra_get_path(graph, source, sink, _allow_direct_edge=True):
+    _, predecessors = dijkstra(graph, source, sink=sink, _allow_direct_edge=_allow_direct_edge)
+    node = sink
+    path = [node]
+    while node != source:
+        if node not in predecessors:
+            return []
+        node = predecessors[node]
+        path.append(node)
+    return list(reversed(path))
+
+
 ############################################################
 #                 Bellman-Ford algorithm                   #
 ############################################################
 
 
-def bellman_ford(graph, source, force_unweighted=False):
+def bellman_ford(graph, source):
     distance = dict()
     predecessor = dict()
     edges = list()
@@ -184,7 +200,7 @@ def bellman_ford(graph, source, force_unweighted=False):
         distance[node] = None
         predecessor[node] = None
         for adj_node, edge_weight in graph[node]:
-            if not graph.weighted or force_unweighted:
+            if not graph.weighted:
                 edge_weight = 1
             edges.append((node, adj_node, edge_weight))
     distance[source] = 0
@@ -201,6 +217,74 @@ def bellman_ford(graph, source, force_unweighted=False):
             raise ValueError('Graph contains negative cycles!')
 
     return distance, predecessor
+
+
+def bellman_ford_get_path(graph, source, sink):
+    pass
+
+
+############################################################
+#                          BFS                             #
+############################################################
+
+
+def bfs_shortest_paths(graph, source, sink=None, _allow_direct_edge=True):
+    pass
+
+
+def bfs_get_path(graph, source, sink, _allow_direct_edge=True):
+    """
+    O(V) time efficiency
+    :param graph:
+    :param source:
+    :param sink:
+    :param _allow_direct_edge: This parameter determines if an edge from node_from to node_to also counts as valid path.
+    :return: return a list of nodes starting with node_from, ending with node_to.
+    """
+    visited_nodes = {source}
+    predecessor = dict()
+    bfs_queue = Queue()
+    bfs_queue.put(source)
+    while not bfs_queue.empty():
+        current_node = bfs_queue.get()
+        for adj_node in graph.adj_nodes(current_node):
+            if adj_node == sink and current_node == source and not _allow_direct_edge:
+                continue
+            if adj_node not in visited_nodes:
+                predecessor[adj_node] = current_node
+                visited_nodes.add(adj_node)
+                bfs_queue.put(adj_node)
+            if adj_node == sink:
+                if _allow_direct_edge or current_node != source:
+                    path = list()
+                    path_node = sink
+                    while path_node != source:
+                        path.append(path_node)
+                        path_node = predecessor[path_node]
+                    path.append(source)
+                    return list(reversed(path))
+    return []
+
+
+############################################################
+#            generalizing path find algorithm              #
+############################################################
+
+
+def _choose_path_find_algorithm(string):
+    string = string.lower().replace('-', '').replace('_', '').replace(' ', '')
+    if string in ['dijkstra']:
+        algorithm = dijkstra_get_path
+    elif string in ['bellmanford', 'bellman', 'ford']:
+        algorithm = bellman_ford_get_path
+    elif string in ['bfs', 'breadthfirstsearch']:
+        algorithm = bfs_get_path
+    else:
+        raise ValueError('"' + string + '" is not recognized as a path finding algorithm. Valid options are:\n'
+                                        ' - dijkstra\n'
+                                        ' - bellmanford\n'
+                                        ' - bfs')
+    return algorithm
 
 
 ############################################################
@@ -422,42 +506,8 @@ def _tarjan_strongconnect(graph, node, i, stack, onstack, index, lowlink):
 
 
 ############################################################
-#                    David's algorithm                     #
+#                  David's nrc algorithm                   #
 ############################################################
-
-
-def get_path_bfs(graph, node_from, node_to, allow_direct_edge=True):
-    """
-    O(V) if path is not found.
-    :param graph:
-    :param node_from:
-    :param node_to:
-    :param allow_direct_edge: This parameter determines if an edge from node_from to node_to also counts as valid path.
-    :return: return a list of nodes starting with node_from, ending with node_to.
-    """
-    visited_nodes = {node_from}
-    predecessor = dict()
-    bfs_queue = Queue()
-    bfs_queue.put(node_from)
-    while not bfs_queue.empty():
-        current_node = bfs_queue.get()
-        for adj_node in graph.adj_nodes(current_node):
-            if adj_node == node_to and current_node == node_from and not allow_direct_edge:
-                continue
-            if adj_node not in visited_nodes:
-                predecessor[adj_node] = current_node
-                visited_nodes.add(adj_node)
-                bfs_queue.put(adj_node)
-            if adj_node == node_to:
-                if allow_direct_edge or current_node != node_from:
-                    path = list()
-                    path_node = node_to
-                    while path_node != node_from:
-                        path.append(path_node)
-                        path_node = predecessor[path_node]
-                    path.append(node_from)
-                    return reversed(path)
-    return list()
 
 
 def get_cyclic_nodes(graph):
@@ -466,21 +516,28 @@ def get_cyclic_nodes(graph):
         if node in cyclic_nodes:
             continue
         for adj_node in graph.adj_nodes(node):
-            path = get_path_bfs(graph, adj_node, node, allow_direct_edge=graph.directed)
+            path = bfs_get_path(graph, adj_node, node, _allow_direct_edge=graph.directed)
             for path_node in path:
                 cyclic_nodes.add(path_node)
     return cyclic_nodes
 
 
-def non_reducible_cycles(graph):
-    if graph.weighted:
-        pass
-    else:
-        return _non_reducible_cycles_unweighted(graph)
+def get_non_reducible_cycles(graph, force_unweighted=False, alg='dijkstra'):
 
-
-def _non_reducible_cycles_unweighted(graph):
-    pass
+    nrc_lists = list()
+    nrc_sets = list()
+    for node_from, node_to, *_ in graph.yield_edges():
+        if graph.weighted and not force_unweighted:
+            nrc_nodes = dijkstra_get_path(graph, node_to, node_from, _allow_direct_edge=False)
+        else:
+            nrc_nodes = bfs_get_path(graph, node_to, node_from, _allow_direct_edge=False)
+            print(nrc_nodes)
+        if nrc_nodes:
+            nrc_set = set(nrc_nodes)
+            if nrc_set not in nrc_sets:
+                nrc_sets.append(nrc_set)
+                nrc_lists.append(nrc_nodes)
+    return nrc_lists
 
 
 ############################################################
@@ -492,4 +549,12 @@ if __name__ == '__main__':
     e = [('a', 'b'), ('b', 'c'), ('c', 'a'), ('c', 'd'), ('d', 'e'), ('e', 'f'), ('f', 'g'), ('g', 'h'), ('h', 'f'),
          ('e', 'i')]
     g = Graph(edges=e, directed=False, weighted=False)
-    print(get_cyclic_nodes(g))
+    e = [('1', '2', 7), ('1', '3', 9), ('1', '6', 14), ('2', '3', 10), ('2', '4', 15), ('3', '4', 11),
+         ('3', '6', 2), ('4', '5', 6), ('5', '6', 9)]
+    g2 = Graph(edges=e, directed=False, weighted=True)
+    e = [('t', 'x', 5), ('t', 'y', 8), ('t', 'z', -4), ('x', 't', -2), ('y', 'x', -3), ('y', 'z', 9),
+         ('z', 'x', 7), ('z', 's', 2), ('s', 't', 6), ('s', 'y', 7)]
+    g3 = Graph(edges=e, directed=True, weighted=True)
+    nrcs = get_non_reducible_cycles(g3)
+    for nrc in nrcs:
+        print(nrc)

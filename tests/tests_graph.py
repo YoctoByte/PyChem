@@ -37,6 +37,10 @@ class TestGraphAlgorithms(unittest.TestCase):
         g = graph.Graph()
         self.assertEqual(g.get_edges(), [])
         self.assertEqual(g.get_nodes(), [])
+        g.add_nodes(['a', 'b', 'c'])
+        g.add_edges([('a', 'b'), ('b', 'c'), ('b', 'd')])
+        self.assertEqual(set(g.get_edges()), {('a', 'b'), ('b', 'c'), ('b', 'd')})
+        self.assertEqual(set(g.get_nodes()), {'a', 'b', 'c', 'd'})
 
     def test_dijkstra(self):
         distances, predecessors = graph.dijkstra(dijkstra_graph(), '1')
