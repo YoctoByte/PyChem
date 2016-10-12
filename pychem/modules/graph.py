@@ -225,7 +225,7 @@ def bellman_ford(graph, source, sink=None, _allow_direct_edge=True):
                     predecessor[node_to] = node_from
 
     for node_from, node_to, edge_weight in edges:
-        if distance[node_from] + edge_weight < distance[node_to]:
+        if distance[node_from] and distance[node_from] + edge_weight < distance[node_to]:
             raise ValueError('Graph contains negative cycles!')
 
     return distance, predecessor
@@ -372,6 +372,8 @@ def _find_ford_fulkerson_path(graph, source, sink, flow, path, force_unweighted=
 
 
 def yield_end_nodes(graph):
+    if graph.directed:
+        raise ValueError('Graph should be undirected.')
     for node in graph:
         edges = graph[node]
         if len(edges) == 1:
@@ -420,7 +422,7 @@ def _get_node_degrees_directed(graph):
 
 
 ############################################################
-#                                                          #
+# Compressing the graph to only junction and ending nodes. #
 ############################################################
 
 
@@ -500,6 +502,11 @@ def chordless_cycles(graph):
 
 
 def tarjan(graph):
+    """
+    Tarjan's strongly connected components algorithm. The algorithm finds all SCCs in a graph.
+
+    A list of SCC sets is returned
+    """
     i = [0]
     stack = list()
     onstack = set()
@@ -550,22 +557,20 @@ def get_cyclic_nodes(graph):
         if node in cyclic_nodes:
             continue
         for adj_node in graph.adj_nodes(node):
-            path = bfs_get_path(graph, adj_node, node, _allow_direct_edge=graph.directed)
+            path = find_shortest_path(graph, adj_node, node, alg='bfs', _allow_direct_edge=graph.directed)
             for path_node in path:
                 cyclic_nodes.add(path_node)
     return cyclic_nodes
 
 
-def get_non_reducible_cycles(graph, force_unweighted=False, alg='dijkstra'):
+def get_non_reducible_cycles(graph, alg='bellmanford'):
+    if not graph.weighted:
+        alg = 'bfs'
 
     nrc_lists = list()
     nrc_sets = list()
     for node_from, node_to, *_ in graph.yield_edges():
-        if graph.weighted and not force_unweighted:
-            nrc_nodes = dijkstra_get_path(graph, node_to, node_from, _allow_direct_edge=False)
-        else:
-            nrc_nodes = bfs_get_path(graph, node_to, node_from, _allow_direct_edge=False)
-            print(nrc_nodes)
+        nrc_nodes = find_shortest_path(graph, node_to, node_from, alg=alg, _allow_direct_edge=False)
         if nrc_nodes:
             nrc_set = set(nrc_nodes)
             if nrc_set not in nrc_sets:
@@ -589,6 +594,6 @@ if __name__ == '__main__':
     e = [('t', 'x', 5), ('t', 'y', 8), ('t', 'z', -4), ('x', 't', -2), ('y', 'x', -3), ('y', 'z', 9),
          ('z', 'x', 7), ('z', 's', 2), ('s', 't', 6), ('s', 'y', 7)]
     g3 = Graph(edges=e, directed=True, weighted=True)
-    nrcs = get_non_reducible_cycles(g3)
+    nrcs = get_non_reducible_cycles(g3, alg='dijkstra')
     for nrc in nrcs:
         print(nrc)
