@@ -1,12 +1,16 @@
 from queue import Queue
 
 
+# todo: implement edge ids
+
+
 class Graph:
     def __init__(self, nodes=None, edges=None, directed=True, weighted=False):
         self.directed = directed
         self.weighted = weighted
         self._nodes = dict()
-        self.edges = set()
+        self._edges = set()
+        self._edge_ids = dict()
 
         self.add_nodes(nodes)
         self.add_edges(edges)
@@ -62,6 +66,8 @@ class Graph:
     def add_node(self, node):
         if node not in self:
             self._nodes[node] = set()
+            return True
+        return False
 
     def add_nodes(self, nodes):
         if not nodes:
@@ -69,7 +75,7 @@ class Graph:
         for node in nodes:
             self.add_node(node)
 
-    def add_edge(self, node_from, node_to, edge_weight=None):
+    def add_edge(self, node_from, node_to, edge_weight=None, identifier=None):
         if node_from not in self:
             self._nodes[node_from] = set()
         if node_to not in self:
@@ -79,9 +85,9 @@ class Graph:
         self._nodes[node_from].add((node_to, edge_weight))
         if not self.directed:
             self._nodes[node_to].add((node_from, edge_weight))
-        self.edges.add((node_from, node_to, edge_weight))
+        self._edges.add((node_from, node_to, edge_weight))
         if not self.directed:
-            self.edges.add((node_to, node_from, edge_weight))
+            self._edges.add((node_to, node_from, edge_weight))
 
     def add_edges(self, edges):
         if not edges:
@@ -94,6 +100,13 @@ class Graph:
                 edge_weight = 1
             self.add_edge(node_from, node_to, edge_weight)
 
+    # todo
+    def add_graph(self, other_graph):
+        if not isinstance(other_graph, Graph):
+            raise ValueError('"' + str(other_graph) + '" is not of type Graph.')
+        if not self.weighted == other_graph.weighted:
+            raise ValueError('Both graph should be weighted or unweighted.')
+
     def copy(self, directed=None, weighted=None, nodes=None):
         if directed is None:
             directed = self.directed
@@ -103,7 +116,7 @@ class Graph:
         for node in self:
             if nodes and node in nodes:
                 new_graph.add_node(node)
-        for node_from, node_to, edge_weight in self.edges:
+        for node_from, node_to, edge_weight in self._edges:
             if nodes and node_from in nodes and node_to in nodes:
                 new_graph.add_edge(node_from, node_to, edge_weight)
         return new_graph
@@ -122,7 +135,7 @@ class Graph:
                 except AttributeError:
                     new_node[node] = node
                 new_graph.add_node(new_node[node])
-        for node_from, node_to, edge_weight in self.edges:
+        for node_from, node_to, edge_weight in self._edges:
             if nodes and node_from in nodes and node_to in nodes:
                 try:
                     edge_weight = edge_weight.copy()
