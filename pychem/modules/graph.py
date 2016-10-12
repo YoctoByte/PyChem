@@ -141,7 +141,7 @@ def dijkstra(graph, source, sink=None, _allow_direct_edge=True):
     """
     Dijkstra's algorithm for finding the shortest paths in a weighted graph starting with node 'source'.
     If the graph contains negative edges, it is better to use the Bellman-Ford algorithm.
-    Worst case performance: O(V*E)
+    Worst case performance: O(V²)
 
     If a node 'sink' is specified, the algorithm terminates if the weight of the shortest path to that
     node is known. This is useful if you only need to know the path to that node.
@@ -191,15 +191,15 @@ def dijkstra(graph, source, sink=None, _allow_direct_edge=True):
 ############################################################
 
 
-def bellman_ford(graph, source):
+def bellman_ford(graph, source, sink=None, _allow_direct_edge=True):
     """
     The Bellman-Ford algorithm for finding the shortest paths in a weighted graph starting with node 'source'.
     This algorithm can be used with graphs with negative weighted edges, as long as the graph does not contain
     negative cycles. If negative cycles are encountered the algorithm raises a ValueError.
     Worst case performance: O(V*E)
 
-    If a node 'sink' is specified, the algorithm terminates if the weight of the shortest path to that
-    node is known. This is useful if you only need to know the path to that node.
+    This algorithm can't be sped up by specifying a sink node. It is still included for consistency between
+    the shortest path algorithms.
 
     '_allow_direct_edge' is a parameter useful for the algorithm that finds non-reducible cycles.
     """
@@ -212,6 +212,8 @@ def bellman_ford(graph, source):
         for adj_node, edge_weight in graph[node]:
             if not graph.weighted:
                 edge_weight = 1
+            if node == source and adj_node == sink and not _allow_direct_edge:
+                continue
             edges.append((node, adj_node, edge_weight))
     distance[source] = 0
 
@@ -235,6 +237,17 @@ def bellman_ford(graph, source):
 
 
 def bfs_shortest_paths(graph, source, sink=None, _allow_direct_edge=True):
+    """
+    Breadth-first search for finding the shortest paths in an unweighted or weighted graph starting with
+    node 'source'. This algorithm finds the paths with the least amount of edges to the other nodes. It does
+    not take edge weight into account and is more efficient than Dijkstra and Bellman-Ford.
+    Worst case performance: O(V)
+
+    If a node 'sink' is specified, the algorithm terminates if the weight of the shortest path to that
+    node is known. This is useful if you only need to know the path to that node.
+
+    '_allow_direct_edge' is a parameter useful for the algorithm that finds non-reducible cycles.
+    """
     visited_nodes = {source}
     predecessor = dict()
     distance = {source: 0}
