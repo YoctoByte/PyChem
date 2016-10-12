@@ -46,9 +46,6 @@ class Atom:
         self.adjacent_atoms = set()
         self.bonds = dict()
 
-    def calculate_isomere_stuff(self, priority_list):
-        pass
-
 
 class Bond:
     def __init__(self, atom1, atom2, bond_type='normal'):

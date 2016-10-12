@@ -1,104 +1,81 @@
 from queue import Queue
 
 
-# todo: implement edge ids
+class Edge:
+    def __init__(self, graph, source, sink, weight=None, identifier=None):
+        self.graph = graph
+        self.identifier = identifier
+        self.source = source
+        self.sink = sink
+        self.weight = weight
+
+    def __repr__(self):
+        return [repr(self.source), repr(self.sink), self.weight, self.graph]
+
+
+class Node:
+    def __init__(self, graph, identifier):
+        self.graph = graph
+        self.identifier = identifier
+        self.adj_nodes = set()
+
+    def __repr__(self):
+        return [self.identifier, self.graph]
 
 
 class Graph:
-    def __init__(self, nodes=None, edges=None, directed=True, weighted=False):
+    """
+    Simple graph. Does not allow more than one edge between two nodes, i.e.: no multigraph.
+    This graph does not (yet) support half-edges and loose edges.
+
+    Can be directed or undirected.
+    Can be weighted or unweighted.
+    """
+    def __init__(self, directed=True, weighted=False):
         self.directed = directed
         self.weighted = weighted
         self._nodes = dict()
-        self._edges = set()
-        self._edge_ids = dict()
-
-        self.add_nodes(nodes)
-        self.add_edges(edges)
+        self._edges = dict()
 
     def __iter__(self):
-        for node in self._nodes:
-            yield node
-
-    def __getitem__(self, node):
-        return self._nodes[node]
+        yield from (node for node in self._nodes.values())
 
     def __len__(self):
         return len(self._nodes)
 
     def yield_edges(self):
-        edges = set()
-        for node_from in self:
-            for node_to, edge_weight in self[node_from]:
-                if not self.directed:
-                    if (node_to, node_from, edge_weight) in edges:
-                        continue
-                    edges.add((node_from, node_to, edge_weight))
-                if self.weighted:
-                    yield (node_from, node_to, edge_weight)
-                else:
-                    yield (node_from, node_to)
+        yield from (edge for edge in self._edges.values())
 
     def get_edges(self):
-        return list(self.yield_edges())
+        return self._edges.values()
 
     def yield_nodes(self):
-        for node in self:
-            yield node
+        yield from self
 
     def get_nodes(self):
-        return list(self)
-
-    def adj_edges(self, node):
-        adj_edges = list()
-        for adj_node, edge_weight in self[node]:
-            if self.weighted:
-                adj_edges.append((node, adj_node, edge_weight))
-            else:
-                adj_edges.append((node, adj_node))
-        return adj_edges
-
-    def adj_nodes(self, node):
-        adj_nodes = list()
-        for adj_node, _ in self[node]:
-            adj_nodes.append(adj_node)
-        return adj_nodes
+        return self._nodes.values()
 
     def add_node(self, node):
-        if node not in self:
-            self._nodes[node] = set()
+        if node not in self._nodes:
+            self._nodes[node] = Node(self, node)
             return True
         return False
 
-    def add_nodes(self, nodes):
-        if not nodes:
-            return
-        for node in nodes:
-            self.add_node(node)
-
-    def add_edge(self, node_from, node_to, edge_weight=None, identifier=None):
-        if node_from not in self:
-            self._nodes[node_from] = set()
-        if node_to not in self:
-            self._nodes[node_to] = set()
+    def add_edge(self, source, sink, weight=None, identifier=None):
+        if source not in self:
+            self._nodes[source] = Node(self, source)
+        if sink not in self:
+            self._nodes[sink] = Node(self, sink)
         if not self.weighted:
-            edge_weight = 1
-        self._nodes[node_from].add((node_to, edge_weight))
-        if not self.directed:
-            self._nodes[node_to].add((node_from, edge_weight))
-        self._edges.add((node_from, node_to, edge_weight))
-        if not self.directed:
-            self._edges.add((node_to, node_from, edge_weight))
+            weight = 1
 
-    def add_edges(self, edges):
-        if not edges:
-            return
-        for edge in edges:
-            node_from, node_to = edge[0], edge[1]
-            if self.weighted:
-                edge_weight = edge[2]
-            else:
-                edge_weight = 1
-            self.add_edge(node_from, node_to, edge_weight)
+        edge = Edge(self, source, sink, weight, identifier)
+
+        self._edges[(source, sink)] = edge
+        self._nodes[source].adj_nodes.add(sink)
+        if not self.directed:
+            self._edges[(sink, source)] = edge
+            self._nodes[sink].adj_nodes.add(source)
 
     # todo
     def add_graph(self, other_graph):
@@ -113,14 +90,15 @@ class Graph:
         if weighted is None:
             weighted = self.directed
         new_graph = Graph(directed=directed, weighted=weighted)
-        for node in self:
-            if nodes and node in nodes:
+        for node in self.yield_nodes():
+            if nodes is not None and node in nodes:
                 new_graph.add_node(node)
-        for node_from, node_to, edge_weight in self._edges:
-            if nodes and node_from in nodes and node_to in nodes:
-                new_graph.add_edge(node_from, node_to, edge_weight)
+        for edge in self.yield_edges():
+            if nodes is not None and edge.sink in nodes and edge.source in nodes:
+                new_graph.add_edge(edge.source, edge.sink, edge.weight, edge.identifier)
         return new_graph
 
+    # todo
     def deepcopy(self, directed=None, weighted=None, nodes=None):
         if directed is None:
             directed = self.directed
@@ -128,8 +106,8 @@ class Graph:
             weighted = self.directed
         new_graph = Graph(directed=directed, weighted=weighted)
         new_node = dict()
-        for node in self:
-            if nodes and node in nodes:
+        for node in self.yield_nodes():
+            if nodes is not None and node in nodes:
                 try:
                     new_node[node] = node.copy()
                 except AttributeError:
