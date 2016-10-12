@@ -319,20 +319,14 @@ def _choose_path_find_algorithm(string):
 ############################################################
 
 
-def _find_ford_fulkerson_path(graph, source, sink, flow, path, force_unweighted=False):
-    if source == sink:
-        return path
-    for adj_node, edge_weight in graph[source]:
-        if not graph.weighted or force_unweighted:
-            edge_weight = 1
-        residual = edge_weight - flow[(source, adj_node)]
-        if residual > 0 and (source, adj_node) not in path:
-            result = _find_ford_fulkerson_path(graph, adj_node, sink, flow, path + [(source, adj_node)])
-            if result is not None:
-                return result
-
-
 def ford_fulkerson(graph, source, sink, force_unweighted=False):
+    """
+    The Ford-Fulkerson algorithm finds the maximum flow between the source node and the sink node in a
+    flow network graph. It also finds the 'minimum cut', a list of nodes that are the bottleneck for the
+    maximum flow.
+
+    If 'force_unweighted' is true, all edges have flow rate one.
+    """
     flow = dict()
     capacity = dict()
     backwards_edges = set()
@@ -357,6 +351,19 @@ def ford_fulkerson(graph, source, sink, force_unweighted=False):
     min_cut = [edge for edge, flow_rate in flow.items() if edge in capacity and capacity[edge] == flow_rate]
     max_flow = sum(flow[(source, adj_node)] for adj_node, _ in graph[source])
     return max_flow, min_cut
+
+
+def _find_ford_fulkerson_path(graph, source, sink, flow, path, force_unweighted=False):
+    if source == sink:
+        return path
+    for adj_node, edge_weight in graph[source]:
+        if not graph.weighted or force_unweighted:
+            edge_weight = 1
+        residual = edge_weight - flow[(source, adj_node)]
+        if residual > 0 and (source, adj_node) not in path:
+            result = _find_ford_fulkerson_path(graph, adj_node, sink, flow, path + [(source, adj_node)])
+            if result is not None:
+                return result
 
 
 ############################################################
