@@ -23,8 +23,10 @@ def _load_data():
 ELEMENTS_DATA = _load_data()
 
 
-class Atom:
+class Atom(graph.Node):
     def __init__(self, element, isotope=None, charge=None, aromatic=None, isomer=None):
+        graph.Node.__init__(self)
+
         try:
             element_data = ELEMENTS_DATA[element]
         except IndexError:
@@ -43,25 +45,30 @@ class Atom:
         self.period = element_data['period']
         self.electronegativity = element_data['electronegativity']
 
-        self.adjacent_atoms = set()
-        self.bonds = dict()
+    def get_adjacent_atoms(self):
+        return self.adj_nodes
 
-    def calculate_isomere_stuff(self, priority_list):
-        pass
+    def get_bonds(self):
+        return self.edges
 
 
-class Bond:
+class Bond(graph.Edge):
     def __init__(self, atom1, atom2, bond_type='normal'):
         """
         Supported bond types are; 'normal', 'double', 'triple', 'quadruple', and 'aromatic'.
         """
-        self.atoms = (atom1, atom2)
-        self.atom1, self.atom2 = atom1, atom2
+        graph.Edge.__init__(self, atom1, atom2)
+
         self.bond_type = bond_type
 
+    def get_atoms(self):
+        return self.sink, self.source
 
-class Molecule:
+
+class Molecule(graph.Graph):
     def __init__(self, smiles=None):
+        graph.Graph.__init__(self)
+
         self._graph = graph.Graph(directed=False, weighted=False)
         self.mass = 0
         self.charge = 0
@@ -74,16 +81,31 @@ class Molecule:
             atom.calculate_isomere_stuff(self.atom_priority_list)
 
     def __iter__(self):
-        for atom in self._graph:
-            yield atom
+        yield from (atom for atom in self.nodes)
+
+    def yield_bonds(self):
+        yield from (bond for bond in self.edges)
+
+    def get_bonds(self):
+        return set(self.yield_bonds())
+
+    def yield_atoms(self):
+        yield from (atom for atom in self.nodes)
+
+    def get_atoms(self):
+        return set(self.yield_atoms())
 
     def add_atom(self, atom):
-        added = self._graph.add_node(atom)
-        if added:
+        if not isinstance(atom, Atom):
+            raise ValueError('"' + str(atom) + '" not of type Atom.')
+        if atom not in self.nodes:
             self.mass += atom.atomic_weight
+        self.add_node(atom)
 
     def add_bond(self, bond):
-        self._graph.add_edge(bond.atom1, bond.atom2, identifier=bond)
+        if not isinstance(bond, Bond):
+            raise ValueError('"' + str(bond) + '" not of type Bond.')
+        self.add_edge(bond)
 
     def _atom_priority_list(self):
         atom_priority_list = list()

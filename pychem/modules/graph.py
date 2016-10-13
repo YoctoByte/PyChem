@@ -2,7 +2,8 @@ from queue import Queue
 
 
 class Node:
-    def __init__(self):
+    def __init__(self, identifier=None):
+        self.identifier = identifier
         self.adj_nodes = set()
         self.edges = set()
 
@@ -62,7 +63,18 @@ class Graph:
         for node in nodes:
             self.add_node(node)
 
-    def add_edge(self, source, sink, weight=None):
+    def add_edge(self, edge):
+        if not isinstance(edge, Edge):
+            raise ValueError('"' + str(edge) + '" is not an Edge.')
+        self.add_node(edge.source)
+        self.add_node(edge.sink)
+
+        self.edges.add(edge)
+        edge.source.add_adjacent_node(edge.sink, edge)
+        if not self.directed:
+            edge.sink.add_adjacent_node(edge.source, edge)
+
+    def create_edge(self, source, sink, weight=None):
         self.add_node(source)
         self.add_node(sink)
 
@@ -82,15 +94,16 @@ class Graph:
         if not self.directed:
             sink.add_adjacent_node(source, edge)
 
-    def add_edges(self, edges):
+    def create_edges(self, edges):
         for edge in edges:
             source, sink = edge[0], edge[1]
             if self.weighted:
                 weight = edge[2]
             else:
                 weight = 1
-            self.add_edge(source, sink, weight)
+            self.create_edge(source, sink, weight)
 
+    # todo:
     def copy(self, directed=None, weighted=None, nodes=None):
         if directed is None:
             directed = self.directed
@@ -105,6 +118,7 @@ class Graph:
                 new_graph.add_edge(edge.source, edge.sink, edge.weight)
         return new_graph
 
+    # todo:
     def deepcopy(self, directed=None, weighted=None, nodes=None):
         if directed is None:
             directed = self.directed
