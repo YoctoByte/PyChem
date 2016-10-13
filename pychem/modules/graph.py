@@ -13,23 +13,26 @@ class Node:
 
 
 class Edge:
-    def __init__(self, source, sink, weight=None):
+    def __init__(self, source, sink, weight=1):
         self.source = source
         self.sink = sink
         self.weight = weight
 
+    def get_other_node(self, node):
+        if self.source == node:
+            return self.sink
+        if self.sink == node:
+            return self.source
+
 
 class Graph:
-    def __init__(self, nodes=None, edges=None, directed=True, weighted=False):
+    def __init__(self, directed=True, weighted=False):
         self.directed = directed
         self.weighted = weighted
 
         self.nodes = set()
         self.edges = set()
         self._node_ids = dict()
-
-        self.add_nodes(nodes)
-        self.add_edges(edges)
 
     def __len__(self):
         return len(self.nodes)
@@ -115,7 +118,7 @@ class Graph:
                 new_graph.add_node(node)
         for edge in self.yield_edges():
             if nodes is None or (edge.source in nodes and edge.sink in nodes):
-                new_graph.add_edge(edge.source, edge.sink, edge.weight)
+                new_graph.create_edge(edge.source, edge.sink, edge.weight)
         return new_graph
 
     # todo:
@@ -162,7 +165,7 @@ def dijkstra(graph, source, sink=None, _allow_direct_edge=True):
     unvisited_nodes = set()
     distance = dict()
     predecessor = dict()
-    for node in graph:
+    for node in graph.yield_nodes():
         distance[node] = float('inf')
         predecessor[node] = None
         unvisited_nodes.add(node)
@@ -184,12 +187,11 @@ def dijkstra(graph, source, sink=None, _allow_direct_edge=True):
         if current_node == sink:
             break
 
-        for adj_node, edge_weight in graph[current_node]:
+        for edge in current_node.edges:
+            adj_node = edge.get_other_node(current_node)
             if current_node == source and adj_node == sink and not _allow_direct_edge:
                 continue
-            if not graph.weighted:
-                edge_weight = 1
-            new_dist = distance[current_node] + edge_weight
+            new_dist = distance[current_node] + edge.weight
             if new_dist < distance[adj_node]:
                 distance[adj_node] = new_dist
                 predecessor[adj_node] = current_node
