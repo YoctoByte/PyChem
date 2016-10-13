@@ -219,27 +219,34 @@ def bellman_ford(graph, source, sink=None, _allow_direct_edge=True):
     distance = dict()
     predecessor = dict()
     edges = list()
-    for node in graph:
+    for edge in graph.edges:
+        if (edge.source == source and edge.sink == sink) or (edge.sink == source and edge.source == sink) \
+                and not _allow_direct_edge:
+            continue
+        edges.append(edge)
+    for node in graph.yield_nodes():
         distance[node] = None
         predecessor[node] = None
-        for adj_node, edge_weight in graph[node]:
-            if not graph.weighted:
-                edge_weight = 1
-            if node == source and adj_node == sink and not _allow_direct_edge:
-                continue
-            edges.append((node, adj_node, edge_weight))
     distance[source] = 0
 
     for _ in range(len(graph) - 1):
-        for node_from, node_to, edge_weight in edges:
-            if distance[node_from] is not None:
-                if distance[node_to] is None or distance[node_from] + edge_weight < distance[node_to]:
-                    distance[node_to] = distance[node_from] + edge_weight
-                    predecessor[node_to] = node_from
+        for edge in edges:
+            if distance[edge.source] is not None:
+                if distance[edge.sink] is None or distance[edge.source] + edge.weight < distance[edge.sink]:
+                    distance[edge.sink] = distance[edge.source] + edge.weight
+                    predecessor[edge.sink] = edge.source
+            if not graph.directed:
+                if distance[edge.sink] is not None:
+                    if distance[edge.source] is None or distance[edge.sink] + edge.weight < distance[edge.source]:
+                        distance[edge.source] = distance[edge.sink] + edge.weight
+                        predecessor[edge.source] = edge.sink
 
-    for node_from, node_to, edge_weight in edges:
-        if distance[node_from] and distance[node_from] + edge_weight < distance[node_to]:
+    for edge in edges:
+        if distance[edge.source] and distance[edge.source] + edge.weight < distance[edge.sink]:
             raise ValueError('Graph contains negative cycles!')
+        if not graph.directed:
+            if distance[edge.sink] and distance[edge.sink] + edge.weight < distance[edge.source]:
+                raise ValueError('Graph contains negative cycles!')
 
     return distance, predecessor
 
