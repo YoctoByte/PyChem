@@ -6,79 +6,98 @@ import codecs
 
 
 def _load_data():
-    with open('../project/PyChem/elements.json') as elements_data_file:
-        raw_data = json.loads(elements_data_file.read())
+    with open('../pychem/data/elements.json') as elements_data_file:
+        data = json.loads(elements_data_file.read())
 
-    data = dict()
-    for i, entry in enumerate(raw_data):
-        entry['atomic number'] = i+1
-        data[entry['element']] = entry
-        data[entry['element'].lower()] = entry
-        data[entry['element name']] = entry
-        data[entry['element name'].lower()] = entry
-        data[entry['atomic number']] = entry
-    return data
+    to_element = dict()
+    for element, element_data in data.items():
+        to_element[element_data['z']] = element
+        to_element[element_data['symbol']] = element
+        to_element[element] = element
+
+    return data, to_element
 
 
-ELEMENTS_DATA = _load_data()
+ELEMENTS_DATA, TRANSLATE_ELEMENT = _load_data()
 
 
 class Atom(graph.Node):
-    def __init__(self, element, isotope=None, charge=None, aromatic=None, isomer=None):
+    def __init__(self, element, molecule, isotope=None, charge=0, aromatic=None, isomer=None):
         graph.Node.__init__(self)
 
+        self.adj_atoms = self.adj_nodes
+        self.bonds = self.edges
+
+        self.molecule = molecule
+
         try:
-            element_data = ELEMENTS_DATA[element]
-        except IndexError:
-            raise ValueError('"' + element + '" is not a valid element.')
+            self.element = TRANSLATE_ELEMENT[element.capitalize()]
+            element_data = ELEMENTS_DATA[self.element]
+        except KeyError:
+            raise ValueError('"' + str(element) + '" is not a valid element.')
 
         self.isotope = isotope
         self.charge = charge
         self.aromatic = aromatic
         self.isomer = isomer
 
-        self.symbol = element_data['element']
-        self.element = element_data['element name']
-        self.atomic_number = element_data['atomic number']
+        self.symbol = element_data['symbol']
+        self.atomic_number = element_data['z']
         self.atomic_weight = element_data['atomic weight']
-        self.group = element_data['group']
-        self.period = element_data['period']
         self.electronegativity = element_data['electronegativity']
 
-    def get_adjacent_atoms(self):
+    def fill_hydrogen(self):
+        if self.symbol not in ['B', 'C', 'N', 'O', 'P', 'S', 'F', 'Cl', 'Br', 'I']:
+            return
+
+        valence = {'B': 3, 'C': 4, 'N': 5, 'O': 6, 'P': 5, 'S': 6, 'F': 7, 'Cl': 7, 'Br': 7, 'I': 7}
+        h_to_add = 8 - valence[self.symbol] + self.charge
+        for bond in self.bonds:
+            h_to_add -= bond.electron_count
+        if self.aromatic:
+            h_to_add -= 1
+
+        for _ in range(4 - abs(4 - h_to_add)):
+            hydrogen = Atom('H', self.molecule)
+            bond = Bond(self, hydrogen)
+            self.molecule.add_atom(hydrogen)
+            self.molecule.add_bond(bond)
+
+    def adjacent_atoms(self):
         return self.adj_nodes
 
-    def get_bonds(self):
+    def bonds(self):
         return self.edges
 
 
 class Bond(graph.Edge):
-    def __init__(self, atom1, atom2, bond_type='normal'):
+    def __init__(self, atom1, atom2, bond_type='-'):
         """
         Supported bond types are; 'normal', 'double', 'triple', 'quadruple', and 'aromatic'.
         """
         graph.Edge.__init__(self, atom1, atom2)
-
+        bond_electrons = {'-': 1, '=': 2, '#': 3, '$': 4, ':': 1}
+        self.electron_count = bond_electrons[bond_type]
         self.bond_type = bond_type
 
-    def get_atoms(self):
+    def atoms(self):
         return self.sink, self.source
 
 
 class Molecule(graph.Graph):
     def __init__(self, smiles=None):
-        graph.Graph.__init__(self)
+        graph.Graph.__init__(self, directed=False, weighted=False)
 
-        self._graph = graph.Graph(directed=False, weighted=False)
+        self.atoms = self.nodes
+        self.bonds = self.edges
+
         self.mass = 0
         self.charge = 0
 
         if smiles:
             _parse_from_smiles(self, smiles)
-
-        self.atom_priority_list = self._atom_priority_list()
-        for atom in self:
-            atom.calculate_isomere_stuff(self.atom_priority_list)
+            for atom in self.atoms.copy():
+                atom.fill_hydrogen()
 
     def __iter__(self):
         yield from (atom for atom in self.nodes)
@@ -226,7 +245,7 @@ class Molecule(graph.Graph):
                         hydrogen_to_add += atom.charge
 
             for _ in range(hydrogen_to_add):
-                hydrogen = Atom('H')
+                hydrogen = Atom('H', self)
                 self.add_atom(hydrogen)
                 self.add_bond(atoms={atom, hydrogen})
 
@@ -244,18 +263,20 @@ def _parse_from_smiles(molecule, smiles_string, _active_atom=None, _labels=None)
             _parse_from_smiles(molecule, token[1:-1], _active_atom=active_atom, _labels=labels)
         elif token[0] == '[':
             isotope, element, h_count, charge, chirality = _parse_smiles_parenthesis(token)
-            new_atom = Atom(element, isotope=isotope, charge=charge, aromatic=element.islower())
+            new_atom = Atom(element, molecule, isotope=isotope, charge=charge, aromatic=element.islower())
             new_atom.h_count = h_count
             molecule.add_atom(new_atom)
             if active_atom:
-                molecule.add_bond(atoms={active_atom, new_atom}, bond_type=bond_type)
+                bond = Bond(active_atom, new_atom, bond_type=bond_type)
+                molecule.add_bond(bond)
             active_atom = new_atom
             bond_type = '-'
         elif token.lower() in ['b', 'c', 'n', 'o', 'p', 's', 'f', 'cl', 'br', 'i']:
-            new_atom = Atom(token, aromatic=token.islower())
+            new_atom = Atom(token, molecule, aromatic=token.islower())
             molecule.add_atom(new_atom)
             if active_atom:
-                molecule.add_bond(atoms={active_atom, new_atom}, bond_type=bond_type)
+                bond = Bond(active_atom, new_atom, bond_type=bond_type)
+                molecule.add_bond(bond)
             active_atom = new_atom
             bond_type = '-'
         elif token[0] == '%':
@@ -263,10 +284,12 @@ def _parse_from_smiles(molecule, smiles_string, _active_atom=None, _labels=None)
             if label not in labels:
                 labels[label] = active_atom
             else:
-                molecule.add_bond(atoms={active_atom, labels[label]}, bond_type=bond_type)
+                bond = Bond(active_atom, labels[label], bond_type=bond_type)
+                molecule.add_bond(bond)
                 bond_type = '-'
         elif token in ['-', '=', '#', '$', ':']:
             bond_type = token
+
 
 
 def _tokenize_smiles(smiles_string):
@@ -316,8 +339,8 @@ def _parse_smiles_parenthesis(token):
 
     isotope = None
     element = ''
-    h_count = None
-    charge = None
+    h_count = 0
+    charge = 0
     chirality = ''
 
     index = 0

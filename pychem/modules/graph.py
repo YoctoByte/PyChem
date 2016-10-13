@@ -50,16 +50,19 @@ class Graph:
         return list(self.yield_nodes())
 
     def add_node(self, node):
-        if isinstance(node, Node):
-            if node not in self.nodes:
-                self.nodes.add(node)
-                return True
-        else:
-            if node not in self._node_ids:
-                nodenode = Node()
-                self.nodes.add(nodenode)
-                self._node_ids[node] = nodenode
-                return True
+        if not isinstance(node, Node):
+            raise ValueError('"' + str(node) + '" is not an Node.')
+        if node not in self.nodes:
+            self.nodes.add(node)
+            return True
+        return False
+
+    def create_node(self, node):
+        if node not in self._node_ids:
+            nodenode = Node()
+            self.nodes.add(nodenode)
+            self._node_ids[node] = nodenode
+            return True
         return False
 
     def add_nodes(self, nodes):
@@ -78,8 +81,14 @@ class Graph:
             edge.sink.add_adjacent_node(edge.source, edge)
 
     def create_edge(self, source, sink, weight=None):
-        self.add_node(source)
-        self.add_node(sink)
+        if isinstance(source, Node):
+            self.add_node(source)
+        else:
+            self.create_node(source)
+        if isinstance(sink, Node):
+            self.add_node(sink)
+        else:
+            self.create_node(sink)
 
         if source in self._node_ids:
             source = self._node_ids[source]
@@ -119,30 +128,6 @@ class Graph:
         for edge in self.yield_edges():
             if nodes is None or (edge.source in nodes and edge.sink in nodes):
                 new_graph.create_edge(edge.source, edge.sink, edge.weight)
-        return new_graph
-
-    # todo:
-    def deepcopy(self, directed=None, weighted=None, nodes=None):
-        if directed is None:
-            directed = self.directed
-        if weighted is None:
-            weighted = self.directed
-        new_graph = Graph(directed=directed, weighted=weighted)
-        new_node = dict()
-        for node in self:
-            if nodes and node in nodes:
-                try:
-                    new_node[node] = node.copy()
-                except AttributeError:
-                    new_node[node] = node
-                new_graph.add_node(new_node[node])
-        for node_from, node_to, edge_weight in self._edges:
-            if nodes and node_from in nodes and node_to in nodes:
-                try:
-                    edge_weight = edge_weight.copy()
-                except AttributeError:
-                    pass
-                new_graph.add_edge(new_node[node_from], new_node[node_to], edge_weight)
         return new_graph
 
 
