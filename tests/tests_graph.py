@@ -3,33 +3,48 @@ from pychem.modules import graph
 
 
 def dijkstra_graph():  # from wikipedia
+    g = graph.Graph(directed=False, weighted=True)
     edges = [('1', '2', 7), ('1', '3', 9), ('1', '6', 14), ('2', '3', 10), ('2', '4', 15), ('3', '4', 11),
              ('3', '6', 2), ('4', '5', 6), ('5', '6', 9)]
-    return graph.Graph(edges=edges, directed=False, weighted=True)
+    for source, sink, weight in edges:
+        g.add_edge(source, sink, weight)
+    return g
 
 
 def bellman_ford_graph():  # from wikipedia
+    g = graph.Graph(directed=True, weighted=True)
     edges = [('t', 'x', 5), ('t', 'y', 8), ('t', 'z', -4), ('x', 't', -2), ('y', 'x', -3), ('y', 'z', 9),
              ('z', 'x', 7), ('z', 's', 2), ('s', 't', 6), ('s', 'y', 7)]
-    return graph.Graph(edges=edges, directed=True, weighted=True)
+    for source, sink, weight in edges:
+        g.add_edge(source, sink, weight)
+    return g
 
 
 def ford_fulkerson_graph():  # from homework 5
+    g = graph.Graph(directed=True, weighted=True)
     edges = [('s', 'u', 15), ('s', 'v', 5), ('s', 'x', 12), ('u', 'v', 10), ('u', 'x', 8), ('x', 'y', 5),
              ('x', 't', 5), ('t', 'y', 15), ('v', 'z', 8), ('z', 't', 10)]
-    return graph.Graph(edges=edges, directed=True, weighted=True)
+    for source, sink, weight in edges:
+        g.add_edge(source, sink, weight)
+    return g
 
 
 def tarjan_graph():  # from wikipedia
+    g = graph.Graph(directed=True, weighted=False)
     edges = [('A', 'E'), ('B', 'A'), ('C', 'B'), ('C', 'D'), ('D', 'C'), ('E', 'B'), ('F', 'B'), ('F', 'E'),
              ('F', 'G'), ('G', 'F'), ('G', 'C'), ('H', 'G'), ('H', 'H'), ('H', 'D'), ('B', 'I'), ('I', 'A')]
-    return graph.Graph(edges=edges, directed=True, weighted=False)
+    for source, sink, weight in edges:
+        g.add_edge(source, sink, weight)
+    return g
 
 
 def semi_cyclic_graph():
+    g = graph.Graph(directed=False, weighted=False)
     edges = [('A', 'B'), ('B', 'C'), ('C', 'D'), ('D', 'A'), ('B', 'E'), ('E', 'F'), ('F', 'G'), ('G', 'H'),
              ('H', 'F')]
-    return graph.Graph(edges=edges, directed=False, weighted=False)
+    for source, sink, weight in edges:
+        g.add_edge(source, sink, weight)
+    return g
 
 
 class TestGraphAlgorithms(unittest.TestCase):
@@ -37,8 +52,10 @@ class TestGraphAlgorithms(unittest.TestCase):
         g = graph.Graph()
         self.assertEqual(g.get_edges(), [])
         self.assertEqual(g.get_nodes(), [])
-        g.add_nodes(['a', 'b', 'c'])
-        g.add_edges([('a', 'b'), ('b', 'c'), ('b', 'd')])
+        for node in ['a', 'b', 'c']:
+            g.add_node(node)
+        for source, sink in [('a', 'b'), ('b', 'c'), ('b', 'd')]:
+            g.add_edge(source, sink)
         self.assertEqual(set(g.get_edges()), {('a', 'b'), ('b', 'c'), ('b', 'd')})
         self.assertEqual(set(g.get_nodes()), {'a', 'b', 'c', 'd'})
 
