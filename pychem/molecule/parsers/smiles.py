@@ -1,42 +1,42 @@
-from pychem.molecules.atom import Atom
-from pychem.molecules.bond import Bond
-from pychem.molecules import geometrics
+from pychem.molecule.molecule import Molecule, Atom, Bond
 
 
-def parse_from(smiles_string, active_atom=None, labels=None):
-    # todo: process / and \ , ie: F/C=C/Cl
-    # todo: process chirality, ie: @/@@, AL/TH, 1/2
-    # todo: include * in molecule
-    # todo: aromatic rings
+def parse(smiles_string, molecule=None):
+    if molecule is None:
+        molecule = Molecule()
+    _parse_from_smiles(molecule, smiles_string)
+    for atom in molecule.atoms.copy():
+        atom.fill_hydrogen()
+    return molecule
 
-    bonds = set()
-    atoms = set()
 
-    if labels is None:
+def _parse_from_smiles(molecule, smiles_string, _active_atom=None, _labels=None):
+    active_atom = _active_atom
+    if _labels is None:
         labels = dict()
+    else:
+        labels = _labels
 
     bond_type = '-'
-    for token in _tokenize(smiles_string):
+    for token in _tokenize_smiles(smiles_string):
         if token[0] == '(':
-            new_atoms = parse_from(token[1:-1], active_atom=active_atom, labels=labels)
-            atoms.update(new_atoms)
+            _parse_from_smiles(molecule, token[1:-1], _active_atom=active_atom, _labels=labels)
         elif token[0] == '[':
-            # todo: process chirality, ie: @/@@, AL/TH, 1/2
-            # TH: Tetrahedral, AL: Allenal, SP: Square Planar, TB: Trigonal Bipyramidal, OH: Octahedral
-            isotope, element, h_count, charge, chirality = _parse_parenthesis(token)
-            new_atom = Atom(element, isotope=isotope, charge=charge, aromatic=element.islower())
+            isotope, element, h_count, charge, chirality = _parse_smiles_parenthesis(token)
+            new_atom = Atom(element, molecule, isotope=isotope, charge=charge, aromatic=element.islower())
             new_atom.h_count = h_count
+            molecule.add_atom(new_atom)
             if active_atom:
-                bonds.add(Bond(atoms={active_atom, new_atom}, bond_type=bond_type))
-            atoms.add(new_atom)
+                bond = Bond(active_atom, new_atom, bond_type=bond_type)
+                molecule.add_bond(bond)
             active_atom = new_atom
             bond_type = '-'
         elif token.lower() in ['b', 'c', 'n', 'o', 'p', 's', 'f', 'cl', 'br', 'i']:
-            new_atom = Atom(token, aromatic=token.islower())
-            new_atom.h_count = -1
+            new_atom = Atom(token, molecule, aromatic=token.islower())
+            molecule.add_atom(new_atom)
             if active_atom:
-                bonds.add(Bond(atoms={active_atom, new_atom}, bond_type=bond_type))
-            atoms.add(new_atom)
+                bond = Bond(active_atom, new_atom, bond_type=bond_type)
+                molecule.add_bond(bond)
             active_atom = new_atom
             bond_type = '-'
         elif token[0] == '%':
@@ -44,22 +44,14 @@ def parse_from(smiles_string, active_atom=None, labels=None):
             if label not in labels:
                 labels[label] = active_atom
             else:
-                bonds.add(Bond(atoms={active_atom, labels[label]}, bond_type=bond_type))
+                bond = Bond(active_atom, labels[label], bond_type=bond_type)
+                molecule.add_bond(bond)
                 bond_type = '-'
-        elif token in ['-', '=', '#', '$', ':']:  # todo: process / and \ , ie: F/C=C/Cl
+        elif token in ['-', '=', '#', '$', ':']:
             bond_type = token
 
-    _fill_hydrogen(bonds, atoms)
-    geometrics.add_bonds_to_atoms(bonds)
-    return atoms
 
-
-# def parse_to(bonds, atoms):
-#     smiles = ''
-#     return smiles
-
-
-def _tokenize(smiles_string):
+def _tokenize_smiles(smiles_string):
     index = 0
     while index < len(smiles_string):
         if smiles_string[index] == '(':
@@ -92,15 +84,19 @@ def _tokenize(smiles_string):
             if smiles_string[index] in '0123456789':
                 yield '%' + smiles_string[index]
             else:
-                yield smiles_string[index]
+                element_string = smiles_string[index]
+                if index+1 < len(smiles_string) and smiles_string[index+1].islower():
+                    element_string += smiles_string[index+1]
+                    index += 1
+                yield element_string
             index += 1
 
 
-def _parse_parenthesis(token):
+def _parse_smiles_parenthesis(token):
     token = token[1:-1]
     token = token.replace(' ', '')
 
-    isotope = 0
+    isotope = None
     element = ''
     h_count = 0
     charge = 0
@@ -129,8 +125,6 @@ def _parse_parenthesis(token):
             index += 1
         if h_count_string:
             h_count = int(h_count_string)
-        else:
-            h_count = 1
     # parse the charge from the token:
     if index < len(token) and token[index] in '-+':
         charge_string = ''
@@ -155,28 +149,3 @@ def _parse_parenthesis(token):
             chirality += token[index:index+2]
 
     return isotope, element, h_count, charge, chirality
-
-
-def _fill_hydrogen(bonds, atoms):
-    bond_electron_count = {'-': 1, ':': 1.5, '=': 2, '#': 3, '$': 4}
-    for atom in atoms.copy():
-        try:
-            if atom.h_count >= 0:
-                h_count = atom.h_count
-            else:
-                h_count = 8 - atom['valence electrons']
-                for bond in bonds:
-                    if atom in bond.atoms:
-                        bond_type = bond.bond_type_symbol
-                        h_count -= bond_electron_count[bond_type]
-                if h_count >= 0:
-                    h_count = h_count
-                else:
-                    h_count = 0
-            del atom.h_count
-            for _ in range(h_count):
-                new_h = Atom('H')
-                atoms.add(new_h)
-                bonds.add(Bond(atoms={atom, new_h}))
-        except AttributeError:
-            pass

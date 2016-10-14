@@ -1,134 +1,133 @@
 from queue import Queue
 
 
-class Graph:
-    def __init__(self, nodes=None, edges=None, directed=True, weighted=False):
-        self.directed = directed
-        self.weighted = weighted
-        self._nodes = dict()
+class Node:
+    def __init__(self, identifier=None):
+        self.identifier = identifier
+        self.adj_nodes = set()
         self.edges = set()
 
-        self.add_nodes(nodes)
-        self.add_edges(edges)
+    def add_adjacent_node(self, node, edge):
+        self.adj_nodes.add(node)
+        self.edges.add(edge)
 
-    def __iter__(self):
-        for node in self._nodes:
-            yield node
 
-    def __getitem__(self, node):
-        return self._nodes[node]
+class Edge:
+    def __init__(self, source, sink, weight=1):
+        self.source = source
+        self.sink = sink
+        self.weight = weight
+
+    def get_other_node(self, node):
+        if self.source == node:
+            return self.sink
+        if self.sink == node:
+            return self.source
+
+
+class Graph:
+    def __init__(self, directed=True, weighted=False):
+        self.directed = directed
+        self.weighted = weighted
+
+        self.nodes = set()
+        self.edges = set()
+        self._node_ids = dict()
 
     def __len__(self):
-        return len(self._nodes)
+        return len(self.nodes)
 
     def yield_edges(self):
-        edges = set()
-        for node_from in self:
-            for node_to, edge_weight in self[node_from]:
-                if not self.directed:
-                    if (node_to, node_from, edge_weight) in edges:
-                        continue
-                    edges.add((node_from, node_to, edge_weight))
-                if self.weighted:
-                    yield (node_from, node_to, edge_weight)
-                else:
-                    yield (node_from, node_to)
+        yield from (edge for edge in self.edges)
 
     def get_edges(self):
         return list(self.yield_edges())
 
     def yield_nodes(self):
-        for node in self:
-            yield node
+        yield from (node for node in self.nodes)
 
     def get_nodes(self):
-        return list(self)
-
-    def adj_edges(self, node):
-        adj_edges = list()
-        for adj_node, edge_weight in self[node]:
-            if self.weighted:
-                adj_edges.append((node, adj_node, edge_weight))
-            else:
-                adj_edges.append((node, adj_node))
-        return adj_edges
-
-    def adj_nodes(self, node):
-        adj_nodes = list()
-        for adj_node, _ in self[node]:
-            adj_nodes.append(adj_node)
-        return adj_nodes
+        return list(self.yield_nodes())
 
     def add_node(self, node):
-        if node not in self:
-            self._nodes[node] = set()
+        if not isinstance(node, Node):
+            raise ValueError('"' + str(node) + '" is not an Node.')
+        if node not in self.nodes:
+            self.nodes.add(node)
+            return True
+        return False
+
+    def create_node(self, node):
+        if node not in self._node_ids:
+            nodenode = Node()
+            self.nodes.add(nodenode)
+            self._node_ids[node] = nodenode
+            return True
+        return False
 
     def add_nodes(self, nodes):
-        if not nodes:
-            return
         for node in nodes:
             self.add_node(node)
 
-    def add_edge(self, node_from, node_to, edge_weight=None):
-        if node_from not in self:
-            self._nodes[node_from] = set()
-        if node_to not in self:
-            self._nodes[node_to] = set()
+    def add_edge(self, edge):
+        if not isinstance(edge, Edge):
+            raise ValueError('"' + str(edge) + '" is not an Edge.')
+        self.add_node(edge.source)
+        self.add_node(edge.sink)
+
+        self.edges.add(edge)
+        edge.source.add_adjacent_node(edge.sink, edge)
+        if not self.directed:
+            edge.sink.add_adjacent_node(edge.source, edge)
+
+    def create_edge(self, source, sink, weight=None):
+        if isinstance(source, Node):
+            self.add_node(source)
+        else:
+            self.create_node(source)
+        if isinstance(sink, Node):
+            self.add_node(sink)
+        else:
+            self.create_node(sink)
+
+        if source in self._node_ids:
+            source = self._node_ids[source]
+        if sink in self._node_ids:
+            sink = self._node_ids[sink]
+
         if not self.weighted:
-            edge_weight = 1
-        self._nodes[node_from].add((node_to, edge_weight))
-        if not self.directed:
-            self._nodes[node_to].add((node_from, edge_weight))
-        self.edges.add((node_from, node_to, edge_weight))
-        if not self.directed:
-            self.edges.add((node_to, node_from, edge_weight))
+            weight = 1
 
-    def add_edges(self, edges):
-        if not edges:
-            return
+        edge = Edge(source, sink, weight)
+
+        self.edges.add(edge)
+
+        source.add_adjacent_node(sink, edge)
+        if not self.directed:
+            sink.add_adjacent_node(source, edge)
+
+    def create_edges(self, edges):
         for edge in edges:
-            node_from, node_to = edge[0], edge[1]
+            source, sink = edge[0], edge[1]
             if self.weighted:
-                edge_weight = edge[2]
+                weight = edge[2]
             else:
-                edge_weight = 1
-            self.add_edge(node_from, node_to, edge_weight)
+                weight = 1
+            self.create_edge(source, sink, weight)
 
+    # todo:
     def copy(self, directed=None, weighted=None, nodes=None):
         if directed is None:
             directed = self.directed
         if weighted is None:
             weighted = self.directed
         new_graph = Graph(directed=directed, weighted=weighted)
-        for node in self:
-            if nodes and node in nodes:
+        for node in self.yield_nodes():
+            if nodes is None or node in nodes:
                 new_graph.add_node(node)
-        for node_from, node_to, edge_weight in self.edges:
-            if nodes and node_from in nodes and node_to in nodes:
-                new_graph.add_edge(node_from, node_to, edge_weight)
-        return new_graph
-
-    def deepcopy(self, directed=None, weighted=None, nodes=None):
-        if directed is None:
-            directed = self.directed
-        if weighted is None:
-            weighted = self.directed
-        new_graph = Graph(directed=directed, weighted=weighted)
-        new_node = dict()
-        for node in self:
-            if nodes and node in nodes:
-                try:
-                    new_node[node] = node.copy()
-                except AttributeError:
-                    new_node[node] = node
-                new_graph.add_node(new_node[node])
-        for node_from, node_to, edge_weight in self.edges:
-            if nodes and node_from in nodes and node_to in nodes:
-                try:
-                    edge_weight = edge_weight.copy()
-                except AttributeError:
-                    pass
-                new_graph.add_edge(new_node[node_from], new_node[node_to], edge_weight)
+        for edge in self.yield_edges():
+            if nodes is None or (edge.source in nodes and edge.sink in nodes):
+                new_graph.create_edge(edge.source, edge.sink, edge.weight)
         return new_graph
 
 
@@ -151,7 +150,7 @@ def dijkstra(graph, source, sink=None, _allow_direct_edge=True):
     unvisited_nodes = set()
     distance = dict()
     predecessor = dict()
-    for node in graph:
+    for node in graph.yield_nodes():
         distance[node] = float('inf')
         predecessor[node] = None
         unvisited_nodes.add(node)
@@ -173,12 +172,11 @@ def dijkstra(graph, source, sink=None, _allow_direct_edge=True):
         if current_node == sink:
             break
 
-        for adj_node, edge_weight in graph[current_node]:
+        for edge in current_node.edges:
+            adj_node = edge.get_other_node(current_node)
             if current_node == source and adj_node == sink and not _allow_direct_edge:
                 continue
-            if not graph.weighted:
-                edge_weight = 1
-            new_dist = distance[current_node] + edge_weight
+            new_dist = distance[current_node] + edge.weight
             if new_dist < distance[adj_node]:
                 distance[adj_node] = new_dist
                 predecessor[adj_node] = current_node
@@ -206,27 +204,34 @@ def bellman_ford(graph, source, sink=None, _allow_direct_edge=True):
     distance = dict()
     predecessor = dict()
     edges = list()
-    for node in graph:
+    for edge in graph.edges:
+        if (edge.source == source and edge.sink == sink) or (edge.sink == source and edge.source == sink) \
+                and not _allow_direct_edge:
+            continue
+        edges.append(edge)
+    for node in graph.yield_nodes():
         distance[node] = None
         predecessor[node] = None
-        for adj_node, edge_weight in graph[node]:
-            if not graph.weighted:
-                edge_weight = 1
-            if node == source and adj_node == sink and not _allow_direct_edge:
-                continue
-            edges.append((node, adj_node, edge_weight))
     distance[source] = 0
 
     for _ in range(len(graph) - 1):
-        for node_from, node_to, edge_weight in edges:
-            if distance[node_from] is not None:
-                if distance[node_to] is None or distance[node_from] + edge_weight < distance[node_to]:
-                    distance[node_to] = distance[node_from] + edge_weight
-                    predecessor[node_to] = node_from
+        for edge in edges:
+            if distance[edge.source] is not None:
+                if distance[edge.sink] is None or distance[edge.source] + edge.weight < distance[edge.sink]:
+                    distance[edge.sink] = distance[edge.source] + edge.weight
+                    predecessor[edge.sink] = edge.source
+            if not graph.directed:
+                if distance[edge.sink] is not None:
+                    if distance[edge.source] is None or distance[edge.sink] + edge.weight < distance[edge.source]:
+                        distance[edge.source] = distance[edge.sink] + edge.weight
+                        predecessor[edge.source] = edge.sink
 
-    for node_from, node_to, edge_weight in edges:
-        if distance[node_from] and distance[node_from] + edge_weight < distance[node_to]:
+    for edge in edges:
+        if distance[edge.source] and distance[edge.source] + edge.weight < distance[edge.sink]:
             raise ValueError('Graph contains negative cycles!')
+        if not graph.directed:
+            if distance[edge.sink] and distance[edge.sink] + edge.weight < distance[edge.source]:
+                raise ValueError('Graph contains negative cycles!')
 
     return distance, predecessor
 

@@ -1,4 +1,4 @@
-from pychem.molecules import geometrics
+from pychem.molecule.molecule import Molecule
 
 import json
 import os
